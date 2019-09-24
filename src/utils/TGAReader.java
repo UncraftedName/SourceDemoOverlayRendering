@@ -16,6 +16,7 @@ package utils;
 
 import java.io.IOException;
 
+@SuppressWarnings("ALL")
 public final class TGAReader {
 
     public static final Order ARGB = new Order(16, 8, 0, 24);
