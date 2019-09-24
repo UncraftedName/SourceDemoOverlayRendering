@@ -12,6 +12,11 @@ public class Main extends PApplet {
     }
 
 
+    public void setup() {
+        frameRate(20);
+    }
+
+
     public void draw() {
         clear();
         circle(50, 50, 60);

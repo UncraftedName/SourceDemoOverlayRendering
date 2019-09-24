@@ -14,6 +14,7 @@ public class ConvertTgaToPng {
     // allows you to preview it and use it with the default libraries
     public static void main(String[] args) throws IOException {
         Files.walkFileTree(Paths.get("img"), new FileVisitor<>() {
+
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 return FileVisitResult.CONTINUE;
@@ -24,6 +25,7 @@ public class ConvertTgaToPng {
                 if (file.toString().endsWith(".tga")) {
                     FileInputStream fis = new FileInputStream(file.toFile());
                     buffer = new byte[fis.available()];
+                    //noinspection ResultOfMethodCallIgnored
                     fis.read(buffer);
                     fis.close();
 
@@ -34,7 +36,7 @@ public class ConvertTgaToPng {
                     image.setRGB(0, 0, width, height, pixels, 0, width);
                     ImageIO.write(image, "png", new File(file.toString().replaceFirst("[.][^.]+$", "") + ".png"));
                     Files.deleteIfExists(file.toAbsolutePath());
-                    System.out.println(file.toAbsolutePath().toString());
+                    System.out.println("Converted " + file.toAbsolutePath().toString());
                 }
                 return FileVisitResult.CONTINUE;
             }
