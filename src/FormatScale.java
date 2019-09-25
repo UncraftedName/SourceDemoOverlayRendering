@@ -1,7 +1,16 @@
+import graphics.Drawable;
+import graphics.GameLocation;
+import graphics.Origin;
+import graphics.Selectable;
 import processing.core.PApplet;
 import processing.core.PImage;
-import processing.core.PMatrix;
 import processing.event.MouseEvent;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
 
 /*
 (not yet implemented)
@@ -18,19 +27,20 @@ public class FormatScale extends PApplet {
 
     // all of these are editable
     private final String imgPath = "img/levels/top/chmb16.png";
-    private final float gameX1 = 50.0f;
-    private final float gameY1 = 50.0f;
-    private final float gameX2 = 100.0f;
-    private final float gameY2 = 100.0f;
-    private final static float ZOOM_FACTOR = 1.2f;
+    private final float gameX1 = 1698.343750f;
+    private final float gameY1 = -739.437500f;
+    private final float gameX2 = -324.968750f;
+    private final float gameY2 = 631.843750f;
+    private static final float ZOOM_FACTOR = 1.2f;
+    private static final String offsetsFilePath = "img/levels/scales and offsets.xml";
 
     // all of these are set automatically
     private PImage img;
-    private PMatrix matrix;
-    private float screenX;
-    private float screenY;
-    private float matrixX, matrixY; // storing these manually cuz matrix doesn't give easy direct access to them
+    private float displayOffsetX, displayOffsetY; // storing these manually cuz matrix doesn't give easy direct access to them
     private float currentZoom;
+    private float screenX1, screenY1, screenX2, screenY2; // where the game locations are
+    private ArrayList<Drawable> drawables = new ArrayList<>();
+    private Properties properties = new Properties();
 
 
     public static void main(String[] args) {
@@ -44,41 +54,114 @@ public class FormatScale extends PApplet {
 
 
     public void setup() {
+        try {
+            properties.loadFromXML(new FileInputStream(offsetsFilePath));
+        } catch (IOException e) {
+            properties = new Properties();
+        }
         img = loadImage(imgPath);
-        matrix = getMatrix();
         currentZoom = 1;
+        try {
+            float screenX0 = Float.parseFloat(properties.getProperty(imgPath + " - game x0 on screen"));
+            float screenY0 = Float.parseFloat(properties.getProperty(imgPath + " - game y0 on screen"));
+            float xRatio = Float.parseFloat(properties.getProperty(imgPath + " - x pixels per game units"));
+            float yRatio = Float.parseFloat(properties.getProperty(imgPath + " - y pixels per game units"));
+            screenX1 = screenX0 + gameX1 * xRatio;
+            screenX2 = screenX0 + gameX2 * xRatio;
+            screenY1 = screenY0 + gameY1 * yRatio;
+            screenY2 = screenY0 + gameY2 * yRatio;
+        } catch (NullPointerException e) {
+            screenX1 = screenY1 = 100;
+            screenX2 = width - 100;
+            screenY2 = height - 100;
+        }
+        drawables.add(new GameLocation(this, screenX1, screenY1));
+        drawables.add(new GameLocation(this, screenX2, screenY2));
+        new GameLocation(this, 100, 100);
+        drawables.add(new Origin(this, -5000, -5000)); // coordinates are updated in draw anyway
     }
 
 
     public void draw() {
         clear();
-        applyMatrix(matrix);
+        scale(currentZoom);
+        translate(displayOffsetX, displayOffsetY);
         image(img, 0, 0);
+        screenX1 = ((GameLocation)drawables.get(0)).x;
+        screenY1 = ((GameLocation)drawables.get(0)).y;
+        screenX2 = ((GameLocation)drawables.get(1)).x;
+        screenY2 = ((GameLocation)drawables.get(1)).y;
+        ((Origin)drawables.get(2)).x = screenX1 - gameX1 * (screenX2 - screenX1) / (gameX2 - gameX1);
+        ((Origin)drawables.get(2)).y = screenY1 - gameY1 * (screenY2 - screenY1) / (gameY2 - gameY1);
+        drawables.forEach(drawable -> drawable.draw(this.g, currentZoom, displayOffsetX, displayOffsetY));
+    }
+
+
+    public void mousePressed() {
+        drawables.forEach(drawable -> drawable.mousePressed(this, currentZoom, displayOffsetX, displayOffsetY));
+        boolean hasSelectedItem = false;
+        for (Drawable drawable : drawables) { // ensure that there is only 1 selected item at a time
+            if (drawable instanceof Selectable) {
+                Selectable selectable = (Selectable) drawable;
+                if (hasSelectedItem)
+                    selectable.isSelected = false;
+                else if (selectable.isSelected)
+                    hasSelectedItem = true;
+            }
+        }
+    }
+
+
+    public void mouseReleased() {
+        drawables.forEach(drawable -> drawable.mouseReleased(this, currentZoom, displayOffsetX, displayOffsetY));
     }
 
 
     public void mouseDragged() {
-        float deltaX = (mouseX - pmouseX) / currentZoom;
-        float deltaY = (mouseY - pmouseY) / currentZoom;
-        matrix.translate(deltaX, deltaY);
-        matrixX += deltaX;
-        matrixY += deltaY;
+        drawables.forEach(drawable -> drawable.mouseDragged(this, currentZoom, displayOffsetX, displayOffsetY));
+        if (anySelectedObject())
+            return;
+        displayOffsetX += (mouseX - pmouseX) / currentZoom;
+        displayOffsetY += (mouseY - pmouseY) / currentZoom;
     }
 
 
     public void mouseWheel(MouseEvent event) {
+        if (anySelectedObject())
+            return;
         // event.getCount == -1 for scroll up, 1 for scroll down
         if (event.getCount() != 0) {
-            matrix.translate(-matrixX, -matrixY); // reset view back to 0,0
             float thisScale = (event.getCount() < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR) * Math.abs(event.getCount());
             float pZoom = currentZoom;
-            matrix.scale(thisScale); // apply the zoomage
             currentZoom *= thisScale;
-            float deltaX = -mouseX * (1 / pZoom - 1 / currentZoom); // the delta to add in order to zoom towards the mouse
-            float deltaY = -mouseY * (1 / pZoom - 1 / currentZoom);
-            matrix.translate(matrixX + deltaX, matrixY + deltaY); // move the view back to the original location, applying the additional delta as well
-            matrixX += deltaX;
-            matrixY += deltaY;
+            displayOffsetX += -mouseX * (1 / pZoom - 1 / currentZoom); // applying the additional delta from the mouse movement
+            displayOffsetY += -mouseY * (1 / pZoom - 1 / currentZoom);
+        }
+    }
+
+
+    public void keyPressed() {
+        if (key == ENTER)
+            setAndWriteProperties();
+    }
+
+
+    private boolean anySelectedObject() {
+        return drawables.stream().filter(drawable -> drawable instanceof Selectable).anyMatch(drawable -> ((Selectable)drawable).isSelected);
+    }
+
+
+    private void setAndWriteProperties() {
+        float xRatio = (screenX2 - screenX1) / (gameX2 - gameX1);
+        float yRatio = (screenY2 - screenY1) / (gameY2 - gameY1);
+        properties.setProperty(imgPath + " - game x0 on screen", String.valueOf(screenX1 - gameX1 * xRatio));
+        properties.setProperty(imgPath + " - game y0 on screen", String.valueOf(screenY1 - gameY1 * yRatio));
+        properties.setProperty(imgPath + " - x pixels per game units", String.valueOf(xRatio));
+        properties.setProperty(imgPath + " - y pixels per game units", String.valueOf(yRatio));
+        try {
+            properties.storeToXML(new FileOutputStream(offsetsFilePath), null);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

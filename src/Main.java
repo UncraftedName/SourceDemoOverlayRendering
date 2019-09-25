@@ -13,7 +13,6 @@ public class Main extends PApplet {
 
 
     public void setup() {
-        frameRate(20);
     }
 
 
