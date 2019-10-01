@@ -12,12 +12,19 @@ public class GameLocation extends Selectable {
     public float x, y;
     private float xOffset, yOffset; // used so that object center doesn't teleport to mouse position
     private PImage img;
+    private int color;
 
 
-    public GameLocation(PApplet applet, float x, float y) {
+    public GameLocation(PApplet applet, float x, float y, int color) {
         this.x = x;
         this.y = y;
         img = applet.loadImage(IMG_PATH);
+        this.color = color;
+    }
+
+
+    public GameLocation(PApplet applet, float x, float y) {
+        this(applet, x, y, applet.color(200));
     }
 
 
@@ -42,7 +49,7 @@ public class GameLocation extends Selectable {
         canvas.noStroke();
         canvas.fill(0, 100, 255, 65);
         canvas.circle(x, y, IMAGE_RADIUS * 5);
-        canvas.fill(255, isSelected ? 150 : 100);
+        canvas.fill(canvas.red(color), canvas.green(color), canvas.blue(color), isSelected ? 100 : 150);
         canvas.circle(x, y, IMAGE_RADIUS);
         canvas.image(img, x, y, IMAGE_RADIUS, IMAGE_RADIUS);
         canvas.popStyle();

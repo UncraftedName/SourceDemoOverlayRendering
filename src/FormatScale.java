@@ -13,12 +13,10 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 /*
-(not yet implemented)
-
 1. get screenshot of level
 2. find two places in the game (which you can see in the image) which have a very well defined location and are relatively far apart and get their coords
     e.g. a corner, a texture lineup on a button, etc.
-3. provide the image path and the two locations to this class
+3. provide the image path and the two locations to this class'
 4. run the main here, and drag the two balls over the two locations in the image for which you got the coordinates,
     using the 0,0 ball as a reference to not accidentally flip the two locations.
 5. when done, press enter, the two reference locations will be saved
@@ -27,20 +25,21 @@ public class FormatScale extends PApplet {
 
     // all of these are editable
     private final String imgPath = "img/levels/top/chmb16.png";
-    private final float gameX1 = 1698.343750f;
-    private final float gameY1 = -739.437500f;
-    private final float gameX2 = -324.968750f;
-    private final float gameY2 = 631.843750f;
+    private final String pos1 = "setpos -691.875000 1031.750000 68.187500;"; // this will be yellow
+    private final String pos2 = "setpos 1896.312500 -744.406250 803.312500;"; // this will be purple
     private static final float ZOOM_FACTOR = 1.2f;
     private static final String offsetsFilePath = "img/levels/scales and offsets.xml";
 
     // all of these are set automatically
+    private float gameX1, gameY1, gameX2, gameY2;
     private PImage img;
     private float displayOffsetX, displayOffsetY; // storing these manually cuz matrix doesn't give easy direct access to them
     private float currentZoom;
     private float screenX1, screenY1, screenX2, screenY2; // where the game locations are
     private ArrayList<Drawable> drawables = new ArrayList<>();
     private Properties properties = new Properties();
+    private long lastFrameTime;
+    private int saveTextMillis = 0; // how many milliseconds to show the saved text for
 
 
     public static void main(String[] args) {
@@ -54,6 +53,11 @@ public class FormatScale extends PApplet {
 
 
     public void setup() {
+        // as of right now, only supports a top-down view
+        gameX1 = Float.parseFloat(pos1.split(" ")[1]);
+        gameY1 = Float.parseFloat(pos1.split(" ")[2]);
+        gameX2 = Float.parseFloat(pos2.split(" ")[1]);
+        gameY2 = Float.parseFloat(pos2.split(" ")[2]);
         try {
             properties.loadFromXML(new FileInputStream(offsetsFilePath));
         } catch (IOException e) {
@@ -75,8 +79,8 @@ public class FormatScale extends PApplet {
             screenX2 = width - 100;
             screenY2 = height - 100;
         }
-        drawables.add(new GameLocation(this, screenX1, screenY1));
-        drawables.add(new GameLocation(this, screenX2, screenY2));
+        drawables.add(new GameLocation(this, screenX1, screenY1, color(200, 200, 0)));
+        drawables.add(new GameLocation(this, screenX2, screenY2, color(255, 0, 255)));
         new GameLocation(this, 100, 100);
         drawables.add(new Origin(this, -5000, -5000)); // coordinates are updated in draw anyway
     }
@@ -94,6 +98,15 @@ public class FormatScale extends PApplet {
         ((Origin)drawables.get(2)).x = screenX1 - gameX1 * (screenX2 - screenX1) / (gameX2 - gameX1);
         ((Origin)drawables.get(2)).y = screenY1 - gameY1 * (screenY2 - screenY1) / (gameY2 - gameY1);
         drawables.forEach(drawable -> drawable.draw(this.g, currentZoom, displayOffsetX, displayOffsetY));
+        if (saveTextMillis > 0) {
+            translate(-displayOffsetX, -displayOffsetY);
+            scale(1 / currentZoom);
+            fill(255, 255, 0, min(255, saveTextMillis));
+            textSize(70);
+            text("saved...", 20, 70);
+            saveTextMillis -= System.currentTimeMillis() - lastFrameTime;
+        }
+        lastFrameTime = System.currentTimeMillis();
     }
 
 
@@ -143,6 +156,7 @@ public class FormatScale extends PApplet {
     public void keyPressed() {
         if (key == ENTER)
             setAndWriteProperties();
+        saveTextMillis = 2000;
     }
 
 
