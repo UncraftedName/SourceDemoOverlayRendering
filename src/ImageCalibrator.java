@@ -21,7 +21,7 @@ import java.util.Properties;
     using the 0,0 ball as a reference to not accidentally flip the two locations.
 5. when done, press enter, the two reference locations will be saved
 */
-public class FormatScale extends PApplet {
+public class ImageCalibrator extends PApplet {
 
     // all of these are editable
     private final String imgPath = "img/levels/top/chmb16.png";
@@ -43,7 +43,7 @@ public class FormatScale extends PApplet {
 
 
     public static void main(String[] args) {
-        PApplet.main(FormatScale.class);
+        PApplet.main(ImageCalibrator.class);
     }
 
 
