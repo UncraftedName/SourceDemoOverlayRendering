@@ -4,23 +4,25 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
-
-import java.util.HashMap;
+import utils.PositionManager;
+import utils.SmallDemoFormat;
 
 public class Player implements Drawable {
 
-    private String playerDemoName;
+    private SmallDemoFormat demo;
     private int diameter;
     private boolean drawPlayerName;
     private PImage img;
-    public int x, y; // updated by applet
+    public float x, y; // updated by applet
+    private PositionManager.DemoToImageMapper mapper;
 
 
-    public Player(PApplet applet, String playerDemoName, int diameter, boolean drawPlayerName) {
-        this.playerDemoName = playerDemoName;
+    public Player(PApplet applet, SmallDemoFormat demo, int diameter, boolean drawPlayerName, PositionManager.DemoToImageMapper mapper) {
+        this.demo = demo;
         this.diameter = diameter;
         this.drawPlayerName = drawPlayerName;
-        String path = "img/icons/players/" + playerDemoName + ".png";
+        this.mapper = mapper;
+        String path = "img/icons/players/" + demo.playerNameInDemo + ".png";
         img = applet.loadImage(path);
         if (img == null)
             img = applet.loadImage("img/icons/sanic.png");
@@ -37,5 +39,22 @@ public class Player implements Drawable {
 
         }
         canvas.popStyle();
+    }
+
+
+    public void setCoords(int tick) {
+        SmallDemoFormat.Position pos = null;
+        for (SmallDemoFormat.Position position : demo.positions) {
+            if (position.tick == tick) {
+                pos = position;
+                break;
+            }
+        }
+        if (pos != null) {
+            double demoX = pos.locations[0][0];
+            double demoY = pos.locations[0][1];
+            x = (float) mapper.getImgX(demoX);
+            y = (float) mapper.getImgY(demoY);
+        }
     }
 }

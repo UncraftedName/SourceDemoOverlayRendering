@@ -28,7 +28,7 @@ public class ImageCalibrator extends PApplet {
     private final String pos1 = "setpos -691.875000 1031.750000 68.187500;"; // this will be yellow
     private final String pos2 = "setpos 1896.312500 -744.406250 803.312500;"; // this will be purple
     private static final float ZOOM_FACTOR = 1.2f;
-    private static final String offsetsFilePath = "img/levels/scales and offsets.xml";
+    public static final String offsetsFilePath = "img/levels/scales and offsets.xml";
 
     // all of these are set automatically
     private float gameX1, gameY1, gameX2, gameY2;
