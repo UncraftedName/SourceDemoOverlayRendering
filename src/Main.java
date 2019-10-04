@@ -10,6 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,14 +20,15 @@ import java.util.Properties;
 
 public class Main extends PApplet {
 
-    private String[] demoPaths = new String[] {"demos/cm/16/16_1560.dem", "demos/cm/16/ch16_26_010.dem",
-            "demos/cm/16/cm-16-inbounds-1583.dem", "demos/cm/16/fnzzy_16il_22,500.dem"};
+    // can be file or folder; if folder then search is recursive
+    private String demoPath = "demos/cm/16";
     private String imgPath = "img/levels/top/chmb16.png";
 
     private List<Drawable> drawables = new ArrayList<>();
     private SmallDemoFormat[] smallDemoFormats;
     private PImage img;
     private PositionManager.DemoToImageMapper mapper;
+    private String[] demoPaths;
 
 
     public static void main(String[] args) {
@@ -54,6 +58,16 @@ public class Main extends PApplet {
 
 
     public void setup() {
+        if (new File(demoPath).isFile()) {
+            demoPaths = new String[] {demoPath};
+        } else {
+            try {
+                demoPaths = Files.walk(Paths.get(demoPath)).filter(Files::isRegularFile).map(Path::toString).filter(s -> s.endsWith(".dem")).toArray(String[]::new);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
         smallDemoFormats = PositionManager.demosFromPaths(demoPaths, false);
         img = loadImage(imgPath);
         Arrays.stream(smallDemoFormats).forEach(smallDemoFormat -> drawables.add(
@@ -66,8 +80,6 @@ public class Main extends PApplet {
         clear();
         image(img, 0, 0);
         drawables.forEach(drawable -> drawable.draw(this.g, 1, 0, 0));
-        drawables.stream().filter(drawable -> drawable instanceof Player).forEach(drawable -> {
-            ((Player) drawable).setCoords(frameCount);
-        });
+        drawables.stream().filter(drawable -> drawable instanceof Player).forEach(drawable -> ((Player) drawable).setCoords(frameCount));
     }
 }
