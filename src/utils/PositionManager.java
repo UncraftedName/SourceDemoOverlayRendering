@@ -1,30 +1,37 @@
 package utils;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 public class PositionManager {
 
     public static SmallDemoFormat[] demosFromPaths(String[] demoPaths, boolean interpolate) {
-        SmallDemoFormat[] smallDemos = new SmallDemoFormat[demoPaths.length];
-        try {
-            for (int i = 0; i < demoPaths.length; i++)
-                smallDemos[i] = new SmallDemoFormat(demoPaths[i]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-2);
+        List<SmallDemoFormat> smallDemos = new ArrayList<>();
+        for (String demoPath : demoPaths) {
+            try {
+                smallDemos.add(new SmallDemoFormat(demoPath));
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(-2);
+            } catch (NoSuchElementException e) {
+                e.printStackTrace();
+                System.out.println("ignoring demo \"" + new File(demoPath).getName() + "\"\n");
+            }
         }
-        return smallDemos;
+        return smallDemos.toArray(new SmallDemoFormat[0]);
         // todo add the interpolation
     }
 
 
     public static class DemoToImageMapper {
 
-        private final float xPixels;
-        private final float yPixels;
-        private final float gameX0;
-        private final float gameY0;
+        public final float xPixels;
+        public final float yPixels;
+        public final float gameX0;
+        public final float gameY0;
 
 
         public DemoToImageMapper(float xPixels, float yPixels, float gameX0, float gameY0) {

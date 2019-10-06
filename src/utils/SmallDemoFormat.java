@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +11,7 @@ public class SmallDemoFormat {
     public final String demoName;
     public final String playerNameInDemo;
     public final ArrayList<Position> positions; // positions for every player
+    public final int maxTick;
 
 
     public SmallDemoFormat(String demoPath) throws IOException, IllegalArgumentException {
@@ -46,10 +48,12 @@ public class SmallDemoFormat {
                     positions.add(new Position(tick, locations, angles));
             }
         });
+        //noinspection OptionalGetWithoutIsPresent
+        maxTick = positions.stream().mapToInt(position -> position.tick).max().getAsInt();
     }
 
 
-    public class Position {
+    public static class Position {
 
         public final int tick;
         // [player][loc/ang]

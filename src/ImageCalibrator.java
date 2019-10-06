@@ -24,11 +24,12 @@ import java.util.Properties;
 public class ImageCalibrator extends PApplet {
 
     // all of these are editable
-    private final String imgPath = "img/levels/top/chmb16.png";
-    private final String pos1 = "setpos -691.875000 1031.750000 68.187500;"; // this will be yellow
-    private final String pos2 = "setpos 1896.312500 -744.406250 803.312500;"; // this will be purple
+    private final String imgPath = "img/levels/top/16.png";
+    private final String pos1 = "etpos -1888.399048 -2975.070313 -302.431030;set"; // this will be yellow
+    private final String pos2 = "etpos 480.041077 1376.059204 64.031250;seta"; // this will be purple
     private static final float ZOOM_FACTOR = 1.2f;
     public static final String offsetsFilePath = "img/levels/scales and offsets.xml";
+    public final View view = View.Z_CONST; // todo
 
     // all of these are set automatically
     private float gameX1, gameY1, gameX2, gameY2;
@@ -172,10 +173,18 @@ public class ImageCalibrator extends PApplet {
         properties.setProperty(imgPath + " - game y0 on screen", String.valueOf(screenY1 - gameY1 * yRatio));
         properties.setProperty(imgPath + " - x pixels per game units", String.valueOf(xRatio));
         properties.setProperty(imgPath + " - y pixels per game units", String.valueOf(yRatio));
+        properties.setProperty(imgPath + " - view", view.toString());
         try {
             properties.storeToXML(new FileOutputStream(offsetsFilePath), null);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public enum View {
+        X_CONST,
+        Y_CONST,
+        Z_CONST;
     }
 }
