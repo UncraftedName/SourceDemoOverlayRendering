@@ -74,7 +74,7 @@ public class Player implements Drawable {
             // set to the average of the image
             textColor = applet.color((float)r / img.pixels.length, (float)g / img.pixels.length, (float)b / img.pixels.length);
             img.updatePixels();
-            System.out.println("set avatar for " + demo.playerNameInDemo + " in demo " + demo.demoName);
+            System.out.println("set avatar for \"" + demo.playerNameInDemo + "\" in demo \"" + demo.demoName + "\"");
         }
     }
 

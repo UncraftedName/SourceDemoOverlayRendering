@@ -24,7 +24,7 @@ public class Main extends PApplet {
     private final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
     private final String imgPath = "img/levels/top/08.png";
     private final boolean playInRealTime = true; // true -> skips over ticks as necessary; false -> ensures every tick in the demo is displayed (kinda like host_framerate)
-    private final Player.TextSetting textSetting = Player.TextSetting.PLAYER_NAME;
+    private final Player.TextSetting textSetting = Player.TextSetting.NONE;
     private final float playerDiameter = 75;
 
     // don't modify
