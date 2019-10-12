@@ -9,12 +9,12 @@ public enum PlayerIcon {
 
     // if the path is not present or null, it's set to a default path
 
-    Imanex("https://cdn.discordapp.com/avatars/120450886370721793/63cca3516ab6c83a2355ec9d4f53ce5e.png?size=512"),
+    Imanex("https://yt3.ggpht.com/a/AGF-l78xn13f4gdNE1RH07wP0s6I3LbgblAitRQY4w"),
     UncraftedName("https://cdn.discordapp.com/avatars/396934998881730560/b37dbe83405b45a1bbf7da61be937db4.png?size=512"),
     Jonah("https://cdn.discordapp.com/avatars/109283823866368000/866b12ed65e535494f88b59e08358447.png?size=512"),
     LamboLord24("https://cdn.discordapp.com/avatars/164439274761093120/18ddc423072141c59b4c3a96e87bfb6b.png?size=512"),
     BiiWix("https://cdn.discordapp.com/avatars/95888044799827968/9a3eddc26aa6c61eaeb2cb9ecf5bbec1.png?size=512"),
-    Fnzzy("https://cdn.discordapp.com/avatars/82817300603863040/a339a754f9165f197d8841240c3537c5.webp?size=512"),
+    Fnzzy("img/icons/players/Fnzzy (⁎^ᴗ^⁎).png"),
     Skizzie("https://cdn.discordapp.com/avatars/126044481681227776/e933b79cfa2a6ba5a00be88c5c1ddb6c.webp?size=512"),
     michael94("https://cdn.discordapp.com/avatars/128559725951451136/6a2d19deb35e078867841bcb03017a50.webp?size=512"),
     Hoshi("https://cdn.discordapp.com/avatars/161540570076938240/b1d09d144bb2ba000ca51f3cbf0c29ed.webp?size=512"),
@@ -35,13 +35,14 @@ public enum PlayerIcon {
     Zeta("https://cdn.discordapp.com/avatars/168895166143397888/fe384f385ce70c8510e21080def91336.webp?size=512"),
     sunsetbear("https://cdn.discordapp.com/avatars/108674374172721152/3570ab92b70c3eed9f75f8042003bff9.webp?size=512"),
     Imita("https://cdn.discordapp.com/avatars/155730575183970304/9f953f7af4d7dfd73d6af936b62fd987.webp?size=512"),
-    KnockKnock("https://cdn.discordapp.com/avatars/208801815662166018/f20a7e042d697efd186e77137337de43.png?size=256"),
-    Goodigo("https://cdn.discordapp.com/avatars/82861107223465984/aed7a82d4f925c5310c91e5dda5edcf2.png?size=256"),
+    KnockKnock("https://cdn.discordapp.com/avatars/208801815662166018/f20a7e042d697efd186e77137337de43.png?size=512"),
+    Goodigo("https://cdn.discordapp.com/avatars/82861107223465984/aed7a82d4f925c5310c91e5dda5edcf2.png?size=512"),
     Blizik("https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/42/421ded019c1743cea1f1f078b0ca5e7d9bc3d848_full.jpg"),
-    moose_hockey("https://static-cdn.jtvnw.net/jtv_user_pictures/1b8324a5-1e92-401a-982f-95893c885596-profile_image-70x70.png"),
+    moose_hockey("img/icons/players/moose.hockey.63.png"),
     Dinoz("https://cdn.discordapp.com/avatars/227596957835591681/359a1f80ecc85715cfd44a76771559e6.webp?size=512"),
-    BANANA_BOYE("https://cdn.discordapp.com/avatars/156921823341051904/e9dc8657e70438541713eab80e8a7574.webp?size=256"),
-    FluffyGMD("https://cdn.discordapp.com/avatars/289964246643769344/09d0785fecd0bbaca40c91e78726d4d2.webp?size=256");
+    BANANA_BOYE("https://cdn.discordapp.com/avatars/156921823341051904/e9dc8657e70438541713eab80e8a7574.webp?size=512"),
+    FluffyGMD("https://cdn.discordapp.com/avatars/289964246643769344/09d0785fecd0bbaca40c91e78726d4d2.webp?size=512"),
+    calamity("https://cdn.discordapp.com/avatars/317041055688163338/25c80d3b9ce6288062f4ade8bbc8623d.webp?size=512");
 
 
     public static final String DEFAULT_URI = "img/icons/sanic.png";

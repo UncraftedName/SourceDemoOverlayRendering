@@ -26,12 +26,13 @@ public class SmallDemoFormat {
         for (; indexOfNullChar < 260; indexOfNullChar++) // loop until null char is found
             if (playerNameAsBytes[indexOfNullChar] == 0)
                 break;
-        playerNameInDemo = new String(playerNameAsBytes, 0, indexOfNullChar, StandardCharsets.US_ASCII);
+        playerNameInDemo = new String(playerNameAsBytes, 0, indexOfNullChar, StandardCharsets.UTF_8);
         // execute parser w/ "-p" to spew out the positions
         InputStream parserOutput = Runtime.getRuntime().exec(
                 new String[]{"resource/UncraftedDemoParser.exe", demoPath, "-p"}).getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(parserOutput));
         positions = new ArrayList<>();
+        // read the lines of the parser output and add the positions to the position list
         reader.lines().filter(s -> s.length() > 0 && s.charAt(0) == '|').forEach(s -> { // |tick|~|x1,y1,z1|p1,y1,r1|~|x2,y2,z2|p2,y2,r2|...
             String[] tickAndPlayers = s.split("~");
             int tick = Integer.parseInt(tickAndPlayers[0].substring(1, tickAndPlayers[0].length() - 1)); // |tick|

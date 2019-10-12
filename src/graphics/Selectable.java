@@ -4,6 +4,7 @@ import processing.core.PApplet;
 
 public abstract class Selectable implements Drawable {
 
+    public boolean pIsSelected;
     public boolean isSelected;
 
     abstract boolean mouseSelects(float zoomedMouseX, float zoomedMouseY);
@@ -11,6 +12,7 @@ public abstract class Selectable implements Drawable {
 
     @Override
     public void mousePressed(PApplet applet, float scaleFactor, float transX, float transY) {
+        pIsSelected = isSelected;
         isSelected = mouseSelects(zoomedMouseX(applet, scaleFactor, transX, transY), zoomedMouseY(applet, scaleFactor, transX, transY));
     }
 
