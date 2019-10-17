@@ -1,10 +1,5 @@
 package playerInfo;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-
-
 public enum PlayerIcon {
 
     // if the path is not present or null, it's set to a default path
@@ -58,15 +53,4 @@ public enum PlayerIcon {
     PlayerIcon() {
         this(null);
     }
-
-    /* // probs won't use
-    // maps the name in the demo to the player name; use getOrDefault() to get items from this map
-    public static HashMap<String, PlayerIcon> demoNameMapper;
-
-    static {
-        demoNameMapper = new HashMap<>();
-        demoNameMapper.put("UncraftedName", UncraftedName);
-        demoNameMapper.put("Jonah", Jonah);
-
-    }*/
 }

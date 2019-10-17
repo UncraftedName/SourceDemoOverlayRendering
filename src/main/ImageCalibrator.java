@@ -25,13 +25,13 @@ import java.util.Optional;
 public class ImageCalibrator extends PApplet {
 
     // all of these are editable
-    private final String imgPath = "img/levels/side/18-x-const.png";
+    private final String imgPath = "img/levels/side/10-y.png";
     // make sure to stand for the z coordinate to be more accurate
-    private final String pos1 = "etpos 2688.000000 896.187500 1280.031250;setang 8"; // this will be yellow
-    private final String pos2 = "etpos -1247.718750 -479.843750 3392.031250;"; // this will be purple
+    private final String pos1 = "etpos -1965.937500 128.500000 -503.218750;setang 89.000000 -87.714020 0.00"; // this will be yellow
+    private final String pos2 = "tpos 1581.656250 127.718750 1032.750000"; // this will be purple
     private static final float ZOOM_FACTOR = 1.2f;
     static final String offsetsFilePath = "img/levels/scales and offsets.xml";
-    private final ViewType viewType = ViewType.Z_CONST_XX; // can choose during the calibration
+    private ViewType defaultView = ViewType.Z_CONST_XX; // can choose during the calibration
 
     // all of these are set automatically
     private float gameX1, gameY1, gameZ1, gameX2, gameY2, gameZ2;
@@ -66,7 +66,6 @@ public class ImageCalibrator extends PApplet {
         gameZ2 = Float.parseFloat(pos2.split(" ")[3].split(";")[0]) - 64.0f;
         img = loadImage(imgPath);
         currentZoom = 1;
-        ViewType selectedViewType;
         try {
             demoToImageMapper = new DemoToImageMapper(offsetsFilePath, imgPath);
             demoToImageMapper.loadProperties();
@@ -74,19 +73,18 @@ public class ImageCalibrator extends PApplet {
             screenY1 = demoToImageMapper.getScreenY(gameX1, gameY1, gameZ1);
             screenX2 = demoToImageMapper.getScreenX(gameX2, gameY2, gameZ2);
             screenY2 = demoToImageMapper.getScreenY(gameX2, gameY2, gameZ2);
-            selectedViewType = demoToImageMapper.viewType;
+            defaultView = demoToImageMapper.viewType;
         } catch (NullPointerException e) { // setting defaults if the image hasn't been calibrated before
             screenX1 = screenY1 = 100;
             screenX2 = width - 100;
             screenY2 = height - 100;
-            selectedViewType = ViewType.Z_CONST_XX;
         }
         drawables.add(new GameLocation(this, screenX1, screenY1, color(200, 200, 0)));
         drawables.add(new GameLocation(this, screenX2, screenY2, color(255, 0, 255)));
         new GameLocation(this, 100, 100);
         for (ViewType viewType : ViewType.values()) {
             Origin origin = new Origin(this, -5000, -5000, viewType); // coordinates are updated in draw anyway
-            if (viewType == selectedViewType)
+            if (viewType == defaultView)
                 origin.isSelected = origin.pIsSelected = true;
             drawables.add(origin);
         }

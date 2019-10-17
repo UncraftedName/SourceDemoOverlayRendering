@@ -17,8 +17,8 @@ public class DemoToImageMapper {
     private final Properties properties;
     private final String xmlPath;
     private final String imgPath;
-    public float screenX0, screenY0;
-    public float xRatio, yRatio;
+    private float screenX0, screenY0;
+    private float xRatio, yRatio;
     public ImageCalibrator.ViewType viewType;
 
     static {
@@ -39,6 +39,8 @@ public class DemoToImageMapper {
     }
 
 
+    // Throws exception if the file doesn't exists or properties don't exist in file,
+    // the catcher then generates default values for the positions of the game locations (the two balls).
     public void loadProperties() throws NullPointerException {
         try {
             properties.loadFromXML(new FileInputStream(xmlPath));
@@ -110,6 +112,9 @@ public class DemoToImageMapper {
     }
 
 
+    // Ensures that x game units per pixel = y game units per pixel.
+    // This is done by scaling one of those values to match the other;
+    // no stretching is done, only shrinking.
     public class WarpedMapper {
 
         public final float screenX0, screenY0;
@@ -118,21 +123,21 @@ public class DemoToImageMapper {
         public final boolean shrinkX;
 
         public WarpedMapper() {
-            DemoToImageMapper parent = DemoToImageMapper.this;
-            shrinkRatio = Math.abs(Math.min(parent.xRatio, parent.yRatio)
-                    / Math.max(parent.xRatio, parent.yRatio));
+            DemoToImageMapper baseMapper = DemoToImageMapper.this; // outer class instance
+            shrinkRatio = Math.abs(Math.min(baseMapper.xRatio, baseMapper.yRatio)
+                    / Math.max(baseMapper.xRatio, baseMapper.yRatio));
             
-            shrinkX = parent.xRatio > parent.yRatio;
+            shrinkX = baseMapper.xRatio > baseMapper.yRatio;
             if (shrinkX) {
-                screenX0 = parent.screenX0 * shrinkRatio;
-                screenY0 = parent.screenY0;
-                xRatio = parent.xRatio * shrinkRatio;
-                yRatio = parent.yRatio;
+                screenX0 = baseMapper.screenX0 * shrinkRatio;
+                screenY0 = baseMapper.screenY0;
+                xRatio = baseMapper.xRatio * shrinkRatio;
+                yRatio = baseMapper.yRatio;
             } else {
-                screenX0 = parent.screenX0;
-                screenY0 = parent.screenY0 * shrinkRatio;
-                xRatio = parent.xRatio;
-                yRatio = parent.yRatio * shrinkRatio;
+                screenX0 = baseMapper.screenX0;
+                screenY0 = baseMapper.screenY0 * shrinkRatio;
+                xRatio = baseMapper.xRatio;
+                yRatio = baseMapper.yRatio * shrinkRatio;
             }
         }
 

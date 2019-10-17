@@ -74,7 +74,7 @@ public class Player implements Drawable {
                         img.pixels[i] = loadedImage.pixels[i];
                     else
                         img.pixels[i] = applet.color(0, 0);
-                    // kind of sort of attempt to fix some dark profile pictures;
+                    // kind of sort of attempt to fix some dark profile pictures; will improve upon this
                     // f(x) = exp(-x/50 + 1.5) + 1
                     // correction(x) = (x+10)f(x)
                     r += Math.min(255, (Math.exp(applet.red(loadedImage.pixels[i]) / -50f + 1.5f) + 1.0f)) * (8 + applet.red(loadedImage.pixels[i]));

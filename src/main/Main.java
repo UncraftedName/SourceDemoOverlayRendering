@@ -20,9 +20,9 @@ import java.util.*;
 
 public class Main extends PApplet {
 
-    private final String demoPath = "demos/cm/18"; // can be file or folder; if folder then search is recursive
-    private final String imgPath = "img/levels/side/18-x-const.png";
-    private final float hostFramerate = 0;
+    private final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
+    private final String imgPath = "img/levels/top/08.png";
+    private final float hostFramerate = 60;
     private final boolean render = false;
     private final Player.TextSetting textSetting = Player.TextSetting.NONE;
     private final float playerDiameter = 75; // pixels
