@@ -5,6 +5,7 @@ import graphics.Player;
 import processing.core.PApplet;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
+import utils.FFMPEGWriter;
 import utils.helperClasses.HelperFuncs;
 import utils.PositionManager;
 import utils.SmallDemoFormat;
@@ -24,27 +25,33 @@ import java.util.concurrent.TimeUnit;
 
 public class Main extends PApplet {
 
-    private final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
-    private final String imgPath = "img/levels/top/08.png";
-    private final float hostFramerate = 60;
-    private final boolean render = true;
-    private final Player.TextSetting textSetting = Player.TextSetting.NONE;
-    private final float playerDiameter = 75; // pixels
-    private final String renderOutputFolder = "img/render output";
+    private static final String demoPath = "demos/cm/08 - blaziken"; // can be file or folder; if folder then search is recursive
+    private static final String imgPath = "img/levels/top/08.png";
+    private static final float hostFramerate = 60;
+    private static final boolean render = true;
+    private static final Player.TextSetting textSetting = Player.TextSetting.NONE;
+    private static final float playerDiameter = 55; // pixels
+    private static final String renderOutputFolder = "img/render output";
+    private static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
 
     // don't modify
     private List<Drawable> drawables = new ArrayList<>();
     private SmallDemoFormat[] smallDemoFormats;
     private PImage img;
-    public DemoToImageMapper.WarpedMapper mapper;
+    private DemoToImageMapper.WarpedMapper mapper;
     private String[] demoPaths;
     private long timeAtBeginDraw;
     private ThreadPoolExecutor executor;
     private int maxLength;
     private Timer imageFileCounter; // displays how many images are processed and how many remain (only if rendering)
+    private boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
 
 
     public static void main(String[] args) {
+        if (render && hostFramerate <= 0) {
+            System.out.println("host_framerate is invalid for render");
+            System.exit(1);
+        }
         PApplet.main(Main.class);
     }
 
@@ -123,7 +130,14 @@ public class Main extends PApplet {
                 public void run() {
                     System.out.println("frames processed: " + executor.getCompletedTaskCount() + "/" + (long)Math.ceil(maxLength / 66f * hostFramerate));
                 }
-            }, 500, 1500);
+            }, 1000, 1500);
+            executor.prestartAllCoreThreads();
+            if (createFFMPEGBatch)
+                FFMPEGWriter.writeBatch(renderOutputFolder, hostFramerate);
+            System.out.println("rendering enabled");
+            System.out.println("images will be " + width + "x" + height);
+        } else {
+            System.out.println("rendering disabled");
         }
     }
 
@@ -132,16 +146,15 @@ public class Main extends PApplet {
     public void draw() {
         if (frameCount == 1)
             timeAtBeginDraw = System.currentTimeMillis();
-        clear();
         image(img, 0, 0);
-        drawables.forEach(drawable -> drawable.draw(this.g, 1, 0, 0));
         float tick = (hostFramerate <= 0 ?
                 ((System.currentTimeMillis() - timeAtBeginDraw) / 1000f * 66)
                 : (frameCount * 66f / hostFramerate));
         HelperFuncs.filterForType(drawables.stream(), Player.class).forEach(player -> player.setCoords(tick));
+        drawables.forEach(drawable -> drawable.draw(this.g, 1, 0, 0));
 
         if (render) {
-            if (HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible)) {
+            if (stopNextFrame) {
                 System.out.println("finished rendering, awaiting image processing...");
                 noLoop(); // i don't think this actually matters
                 executor.shutdown();
@@ -152,10 +165,15 @@ public class Main extends PApplet {
                 }
                 executor.shutdownNow();
                 imageFileCounter.cancel();
-                System.out.println("finished image processing, shutting down");
+                // just for the ocd :p
+                System.out.println("frames processed: " +
+                        (long)Math.ceil(maxLength / 66f * hostFramerate) + "/" +
+                        (long)Math.ceil(maxLength / 66f * hostFramerate) + "\n" +
+                        "finished image processing, shutting down");
                 exit();
             } else {
                 executor.execute(new ImageSaverRunnable(renderOutputFolder, frameCount, HelperFuncs.deepImageCopy((BufferedImage)g.image)));
+                stopNextFrame = HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible);
             }
         }
     }
@@ -163,8 +181,19 @@ public class Main extends PApplet {
 
     @Override
     public void dispose() {
-        if (executor != null && !executor.isTerminated())
-            executor.shutdownNow();
+        if (executor != null && !executor.isTerminated()) {
+            executor.getQueue().clear();
+            imageFileCounter.cancel();
+            System.out.println("waiting for " + executor.getActiveCount() + " images to finish before shutting down...");
+            try {
+                executor.shutdown();
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+                System.out.println("finished");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                executor.shutdownNow();
+            }
+        }
         super.dispose();
     }
 }

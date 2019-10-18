@@ -37,7 +37,8 @@ public enum PlayerIcon {
     Dinoz("https://cdn.discordapp.com/avatars/227596957835591681/359a1f80ecc85715cfd44a76771559e6.webp?size=512"),
     BANANA_BOYE("https://cdn.discordapp.com/avatars/156921823341051904/e9dc8657e70438541713eab80e8a7574.webp?size=512"),
     FluffyGMD("https://cdn.discordapp.com/avatars/289964246643769344/09d0785fecd0bbaca40c91e78726d4d2.webp?size=512"),
-    calamity("https://cdn.discordapp.com/avatars/317041055688163338/25c80d3b9ce6288062f4ade8bbc8623d.webp?size=512");
+    calamity("https://cdn.discordapp.com/avatars/317041055688163338/25c80d3b9ce6288062f4ade8bbc8623d.webp?size=512"),
+    Blaziken("https://cdn.discordapp.com/avatars/118377655799250953/8ba3fefa197ce1d0c81a0d5c298e5db5.webp?size=512");
 
 
     public static final String DEFAULT_URI = "img/icons/sanic.png";
