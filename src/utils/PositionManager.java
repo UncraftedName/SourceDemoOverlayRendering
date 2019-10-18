@@ -1,10 +1,7 @@
 package utils;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class PositionManager {
 
@@ -22,6 +19,9 @@ public class PositionManager {
                 System.out.println("ignoring demo \"" + new File(demoPath).getName() + "\"\n");
             }
         });
+        // sort the demos based on length so the faster ones are displayed first
+        smallDemos.sort(Comparator.comparingInt(o -> o.maxTick));
+        Collections.reverse(smallDemos);
         return smallDemos.toArray(new SmallDemoFormat[0]);
     }
 }

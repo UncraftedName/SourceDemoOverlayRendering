@@ -1,7 +1,9 @@
-package utils;
+package utils.helperClasses;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,5 +25,13 @@ public class HelperFuncs {
         List<T> list = stream.collect(Collectors.toList());
         Collections.reverse(list);
         return list.stream();
+    }
+
+
+    public static BufferedImage deepImageCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 }

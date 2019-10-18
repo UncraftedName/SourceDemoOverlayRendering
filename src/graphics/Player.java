@@ -139,14 +139,15 @@ public class Player implements Drawable {
     }
 
 
-    public void setCoords(int tick) {
-        if (tick > demo.maxTick) {
+    public void setCoords(float tick) {
+        int intTick = (int)tick; // for now, will do interp later
+        if (intTick > demo.maxTick) {
             invisible = true;
             return;
         }
         SmallDemoFormat.Position pos = null;
         for (SmallDemoFormat.Position position : demo.positions) {
-            if (position.tick == tick) {
+            if (position.tick == intTick) {
                 pos = position;
                 break;
             }

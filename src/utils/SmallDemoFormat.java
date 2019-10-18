@@ -45,12 +45,27 @@ public class SmallDemoFormat {
                     locations[i] = Arrays.stream(locationsAndAngles[i][1].split(",")).mapToDouble(Double::parseDouble).toArray();
                     angles[i] = Arrays.stream(locationsAndAngles[i][2].split(",")).mapToDouble(Double::parseDouble).toArray();
                 }
-                if (positions.stream().noneMatch(position -> position.tick == tick)) // make sure there are no duplicate ticks
+                // make sure there are no duplicate ticks, and remove the tick where pos = ang = 0
+                if (positions.stream().noneMatch(position -> position.tick == tick) && !isNullTick(locations, angles))
                     positions.add(new Position(tick, locations, angles));
             }
         });
         //noinspection OptionalGetWithoutIsPresent
         maxTick = positions.stream().mapToInt(position -> position.tick).max().getAsInt();
+    }
+
+
+    // loc = ang = 0
+    private static boolean isNullTick(double[][] locations, double[][] angles) {
+        for (double[] location : locations)
+            for (double locComp : location)
+                if (locComp != 0)
+                    return false;
+        for (double[] angle : angles)
+            for (double angComp : angle)
+                if (angComp != 0)
+                    return false;
+        return true;
     }
 
 

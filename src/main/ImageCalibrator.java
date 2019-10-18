@@ -7,7 +7,7 @@ import graphics.Selectable;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.event.MouseEvent;
-import utils.HelperFuncs;
+import utils.helperClasses.HelperFuncs;
 import utils.DemoToImageMapper;
 
 import java.util.ArrayList;
