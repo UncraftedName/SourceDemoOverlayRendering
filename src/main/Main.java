@@ -6,10 +6,11 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
 import utils.FFMPEGWriter;
+import utils.helperClasses.threading.BlockingThreadPoolExecutor;
 import utils.helperClasses.HelperFuncs;
 import utils.PositionManager;
 import utils.SmallDemoFormat;
-import utils.helperClasses.ImageSaverRunnable;
+import utils.helperClasses.ImageSaver;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -19,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -43,19 +43,30 @@ public class Main extends PApplet {
     private long timeAtBeginDraw;
     private ThreadPoolExecutor executor;
     private int maxLength;
-    private Timer imageFileCounter; // displays how many images are processed and how many remain (only if rendering)
     private boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
+    private float hostTimeScale = 1;
+    private Timer timer; // prints stats while rendering
+    private TimerTask timerTask = new TimerTask() {
+        @Override
+        public void run() { // this might print some weird values the very last time, not sure why that happens
+            System.out.println(String.format("frames processed: %d/%d, queue size: %d/%d, threads active: %d/%d",
+                    executor.getCompletedTaskCount(), (long)Math.ceil(maxLength / 66f * hostFramerate),
+                    (BlockingThreadPoolExecutor.queueCapacity - executor.getQueue().remainingCapacity()), BlockingThreadPoolExecutor.queueCapacity,
+                    executor.getActiveCount(), executor.getMaximumPoolSize()));
+        }
+    };
 
 
     public static void main(String[] args) {
         if (render && hostFramerate <= 0) {
-            System.out.println("host_framerate is invalid for render");
+            System.out.println("host framerate should be positive value");
             System.exit(1);
         }
         PApplet.main(Main.class);
     }
 
 
+    @Override
     public void settings() {
         BufferedImage bImg = null;
         try {
@@ -88,6 +99,7 @@ public class Main extends PApplet {
     }
 
 
+    @Override
     public void setup() {
         if (new File(demoPath).isFile()) {
             demoPaths = new String[] {demoPath};
@@ -119,18 +131,9 @@ public class Main extends PApplet {
         System.out.println("max demo length in ticks: " + maxLength);
 
         if (render) {
-            executor = new ThreadPoolExecutor(
-                    Runtime.getRuntime().availableProcessors(),
-                    Integer.MAX_VALUE,
-                    10, TimeUnit.SECONDS,
-                    new PriorityBlockingQueue<>(10, ImageSaverRunnable.frameNumComparator));
-            imageFileCounter = new Timer();
-            imageFileCounter.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    System.out.println("frames processed: " + executor.getCompletedTaskCount() + "/" + (long)Math.ceil(maxLength / 66f * hostFramerate));
-                }
-            }, 1000, 1500);
+            executor = new BlockingThreadPoolExecutor();
+            timer = new Timer(true);
+            timer.scheduleAtFixedRate(timerTask, 1000, 1000);
             executor.prestartAllCoreThreads();
             if (createFFMPEGBatch)
                 FFMPEGWriter.writeBatch(renderOutputFolder, hostFramerate);
@@ -143,6 +146,7 @@ public class Main extends PApplet {
 
 
     @SuppressWarnings({"divzero", "ConstantConditions", "RedundantSuppression"})
+    @Override
     public void draw() {
         if (frameCount == 1)
             timeAtBeginDraw = System.currentTimeMillis();
@@ -150,13 +154,13 @@ public class Main extends PApplet {
         float tick = (hostFramerate <= 0 ?
                 ((System.currentTimeMillis() - timeAtBeginDraw) / 1000f * 66)
                 : (frameCount * 66f / hostFramerate));
+
         HelperFuncs.filterForType(drawables.stream(), Player.class).forEach(player -> player.setCoords(tick));
         drawables.forEach(drawable -> drawable.draw(this.g, 1, 0, 0));
 
         if (render) {
             if (stopNextFrame) {
                 System.out.println("finished rendering, awaiting image processing...");
-                noLoop(); // i don't think this actually matters
                 executor.shutdown();
                 try {
                     executor.awaitTermination(5, TimeUnit.MINUTES);
@@ -164,15 +168,13 @@ public class Main extends PApplet {
                     e.printStackTrace();
                 }
                 executor.shutdownNow();
-                imageFileCounter.cancel();
-                // just for the ocd :p
-                System.out.println("frames processed: " +
-                        (long)Math.ceil(maxLength / 66f * hostFramerate) + "/" +
-                        (long)Math.ceil(maxLength / 66f * hostFramerate) + "\n" +
-                        "finished image processing, shutting down");
+                timer.cancel();
+                timerTask.run(); // just for the ocd :p
                 exit();
             } else {
-                executor.execute(new ImageSaverRunnable(renderOutputFolder, frameCount, HelperFuncs.deepImageCopy((BufferedImage)g.image)));
+                // add a new image to the queue
+                executor.execute(new ImageSaver(renderOutputFolder, frameCount, HelperFuncs.deepImageCopy((BufferedImage)g.image)));
+                // if all players are invisible, the next frame will not be rendering (image is only displayed when draw is finished)
                 stopNextFrame = HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible);
             }
         }
@@ -183,11 +185,11 @@ public class Main extends PApplet {
     public void dispose() {
         if (executor != null && !executor.isTerminated()) {
             executor.getQueue().clear();
-            imageFileCounter.cancel();
+            timer.cancel();
             System.out.println("waiting for " + executor.getActiveCount() + " images to finish before shutting down...");
             try {
                 executor.shutdown();
-                executor.awaitTermination(10, TimeUnit.SECONDS);
+                executor.awaitTermination(25, TimeUnit.SECONDS);
                 System.out.println("finished");
             } catch (InterruptedException e) {
                 e.printStackTrace();

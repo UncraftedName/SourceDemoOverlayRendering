@@ -1,8 +1,7 @@
 package utils;
 
-import utils.helperClasses.ImageSaverRunnable;
+import utils.helperClasses.ImageSaver;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,7 +15,7 @@ public class FFMPEGWriter {
     public static void writeBatch(String renderDir, float fps) {
         try {
             FileWriter writer = new FileWriter(Path.of(renderDir, fileName).toFile(), false);
-            writer.write("ffmpeg.exe -r " + fps + " -i %%0" + ImageSaverRunnable.padCount + "d.png " +
+            writer.write("ffmpeg.exe -r " + fps + " -i %%0" + ImageSaver.padCount + "d.png " +
                     "-vcodec libx264 -preset veryfast -crf 15 -r " + fps + " -y _output.mp4");
             writer.close();
         } catch (IOException e) {

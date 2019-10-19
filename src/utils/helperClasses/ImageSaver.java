@@ -6,17 +6,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 
-public class ImageSaverRunnable implements Runnable {
+// a class to asynchronously save the applet images as png's
+public class ImageSaver implements Runnable {
 
     // for the priority queue to prioritize threads w/ lower frame numbers. Attempts to write the frames in order.
-    public final static Comparator<Runnable> frameNumComparator = Comparator.comparingInt(o -> ((ImageSaverRunnable)o).frameNumber);
+    public final static Comparator<Runnable> frameNumComparator = Comparator.comparingInt(o -> ((ImageSaver)o).frameNumber);
     public final static int padCount = 5; // output is padded with this many 0's
     private String outDir;
     private int frameNumber;
     private BufferedImage image;
 
 
-    public ImageSaverRunnable(String outDir, int frameNumber, BufferedImage image) {
+    public ImageSaver(String outDir, int frameNumber, BufferedImage image) {
         this.outDir = outDir;
         this.frameNumber = frameNumber;
         this.image = image;
