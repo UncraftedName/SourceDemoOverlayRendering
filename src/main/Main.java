@@ -10,7 +10,7 @@ import utils.helperClasses.threading.BlockingThreadPoolExecutor;
 import utils.helperClasses.HelperFuncs;
 import utils.PositionManager;
 import utils.SmallDemoFormat;
-import utils.helperClasses.ImageSaver;
+import utils.helperClasses.threading.ImageSaver;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,12 +20,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 public class Main extends PApplet {
 
-    private static final String demoPath = "demos/cm/08 - blaziken"; // can be file or folder; if folder then search is recursive
+    private static final String demoPath = "demos/cm/08 - uncrafted"; // can be file or folder; if folder then search is recursive
     private static final String imgPath = "img/levels/top/08.png";
     private static final float hostFramerate = 60;
     private static final boolean render = true;
@@ -41,16 +43,16 @@ public class Main extends PApplet {
     private DemoToImageMapper.WarpedMapper mapper;
     private String[] demoPaths;
     private long timeAtBeginDraw;
-    private ThreadPoolExecutor executor;
+    private BlockingThreadPoolExecutor executor;
     private int maxLength;
     private boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
     private float hostTimeScale = 1;
-    private Timer timer; // prints stats while rendering
-    private TimerTask timerTask = new TimerTask() {
+    private Timer timer; // prints stats while rendering/deleting
+    private TimerTask renderTimerTask = new TimerTask() {
         @Override
-        public void run() { // this might print some weird values the very last time, not sure why that happens
+        public void run() {
             System.out.println(String.format("frames processed: %d/%d, queue size: %d/%d, threads active: %d/%d",
-                    executor.getCompletedTaskCount(), (long)Math.ceil(maxLength / 66f * hostFramerate),
+                    ImageSaver.framesFinishedInDir.get(renderOutputFolder).get(), (long)Math.ceil(maxLength / 66f * hostFramerate) + 1,
                     (BlockingThreadPoolExecutor.queueCapacity - executor.getQueue().remainingCapacity()), BlockingThreadPoolExecutor.queueCapacity,
                     executor.getActiveCount(), executor.getMaximumPoolSize()));
         }
@@ -88,13 +90,28 @@ public class Main extends PApplet {
             //noinspection ResultOfMethodCallIgnored
             f.mkdirs();
             System.out.println("deleting old files...");
-            Arrays.stream(Objects.requireNonNull(f.listFiles())).filter(file -> file.getName().endsWith(".png")).forEach(file -> {
+            final File[] filesToDelete = Arrays.stream(Objects.requireNonNull(f.listFiles()))
+                    .filter(file -> file.getName().endsWith(".png"))
+                    .toArray(File[]::new);
+            final AtomicLong deletedCount = new AtomicLong();
+            timer = new Timer(true);
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println(String.format("deleted %d/%d files", deletedCount.get(), filesToDelete.length));
+                }
+            };
+            timer.scheduleAtFixedRate(timerTask, 0, 1000);
+            Arrays.stream(filesToDelete).forEach(file -> {
                 try {
                     Files.delete(file.toPath());
+                    deletedCount.incrementAndGet();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+            timer.cancel();
+            timerTask.run();
         }
     }
 
@@ -133,7 +150,7 @@ public class Main extends PApplet {
         if (render) {
             executor = new BlockingThreadPoolExecutor();
             timer = new Timer(true);
-            timer.scheduleAtFixedRate(timerTask, 1000, 1000);
+            timer.scheduleAtFixedRate(renderTimerTask, 500, 1000);
             executor.prestartAllCoreThreads();
             if (createFFMPEGBatch)
                 FFMPEGWriter.writeBatch(renderOutputFolder, hostFramerate);
@@ -169,7 +186,7 @@ public class Main extends PApplet {
                 }
                 executor.shutdownNow();
                 timer.cancel();
-                timerTask.run(); // just for the ocd :p
+                renderTimerTask.run(); // just for the ocd :p
                 exit();
             } else {
                 // add a new image to the queue
@@ -183,6 +200,7 @@ public class Main extends PApplet {
 
     @Override
     public void dispose() {
+        super.dispose();
         if (executor != null && !executor.isTerminated()) {
             executor.getQueue().clear();
             timer.cancel();
@@ -196,6 +214,5 @@ public class Main extends PApplet {
                 executor.shutdownNow();
             }
         }
-        super.dispose();
     }
 }
