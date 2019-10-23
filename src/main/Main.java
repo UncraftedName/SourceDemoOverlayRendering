@@ -52,6 +52,7 @@ public class Main extends PApplet {
     public BlockingThreadPoolExecutor executor;
     public int maxLength;
     public boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
+    public boolean setNextFrameAsKeyFrame = true;
     public Timer timer; // prints stats while rendering/deleting
     public TimerTask renderTimerTask = new TimerTask() {
         @Override
@@ -85,10 +86,12 @@ public class Main extends PApplet {
             e.printStackTrace();
             System.exit(-2);
         }
-        if (mapper.shrinkX)
-            size((int) (bImg.getWidth() * mapper.shrinkRatio), bImg.getHeight());
+        int sizeX = mapper.shrinkX ? (int) (bImg.getWidth() * mapper.shrinkRatio) : bImg.getWidth();
+        int sizeY = mapper.shrinkX ? bImg.getHeight() : (int) (bImg.getHeight() * mapper.shrinkRatio);
+        if (render)
+            size(sizeX, sizeY);
         else
-            size(bImg.getWidth(), (int) (bImg.getHeight() * mapper.shrinkRatio));
+            size(sizeX, sizeY, P2D); // P2D seems to be much more reliable for key presses, but less pretty
 
         if (render) {
             File f = new File(renderOutputFolder);
@@ -172,8 +175,11 @@ public class Main extends PApplet {
     @SuppressWarnings({"divzero", "ConstantConditions", "RedundantSuppression"})
     @Override
     public void draw() {
-        if (frameCount == 1)
+        if (setNextFrameAsKeyFrame) {
             timeAtListKeyFrame = System.currentTimeMillis();
+            tickAtLastKeyFrame = currentTick;
+            setNextFrameAsKeyFrame = false;
+        }
         image(img, 0, 0);
         if (!paused) {
             currentTick = (hostFramerate <= 0 ?
@@ -238,8 +244,7 @@ public class Main extends PApplet {
                     hostTimeScale = -Math.abs(hostTimeScale);
                     break;
             }
-            timeAtListKeyFrame = System.currentTimeMillis();
-            tickAtLastKeyFrame = currentTick;
+            setNextFrameAsKeyFrame = true;
         }
     }
 

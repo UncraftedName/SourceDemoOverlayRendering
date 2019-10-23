@@ -31,14 +31,14 @@ public class SpeedArrow implements Drawable {
 
     @Override
     public void draw(Main canvas) {
-        if (canvas.hostTimeScale == 0)
+        if (canvas.paused)
             canvas.image(pauseImg, 0, canvas.height - diameter);
         else if (canvas.hostTimeScale > 0)
             canvas.image(forwardsPlaybackImg, 0, canvas.height - diameter);
         else
             canvas.image(backwardsPlaybackImg, 0, canvas.height - diameter);
         canvas.textSize(30);
-        canvas.text("Speed: " + HelperFuncs.roundToPlaces(canvas.hostTimeScale, 2), 0, canvas.height - diameter);
+        canvas.text("Speed: " + HelperFuncs.roundToPlaces(canvas.hostTimeScale, 3), 0, canvas.height - diameter);
         canvas.text("Tick: " + HelperFuncs.roundToPlaces(canvas.currentTick, 1), 0, canvas.height - diameter - 30);
     }
 }
