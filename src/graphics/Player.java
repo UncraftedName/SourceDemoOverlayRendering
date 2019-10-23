@@ -22,6 +22,7 @@ public class Player implements Drawable {
     private final SmallDemoFormat demo;
     private final float diameter;
     private final TextSetting textSetting;
+    private final InterpType interpType;
     private final PImage img;
     private float x, y;
     private final DemoToImageMapper.WarpedMapper mapper;
@@ -31,11 +32,12 @@ public class Player implements Drawable {
     private final int textColor;
 
 
-    public Player(PApplet applet, SmallDemoFormat demo, float diameter, TextSetting setting, DemoToImageMapper.WarpedMapper mapper) {
+    public Player(PApplet applet, SmallDemoFormat demo, float diameter, TextSetting setting, InterpType interpType, DemoToImageMapper.WarpedMapper mapper) {
         this.demo = demo;
         this.diameter = diameter;
         textSize = diameter * textScale;
         textSetting = setting;
+        this.interpType = interpType;
         this.mapper = mapper;
         invisible = false;
         if (playerToImgMap.containsKey(demo.playerNameInDemo)) {
@@ -140,26 +142,36 @@ public class Player implements Drawable {
     }
 
 
+    @SuppressWarnings("ConstantConditions")
     private void setCoords(float tick) {
-        int intTick = (int)tick; // for now, will do interp later
-        if (intTick > demo.maxTick) {
-            invisible = true;
-            return;
-        }
-        SmallDemoFormat.Position pos = null;
-        for (SmallDemoFormat.Position position : demo.positions) {
-            if (position.tick == intTick) {
-                pos = position;
-                break;
+        double[] positions = null;
+        SmallDemoFormat.Position tmpPos = new SmallDemoFormat.Position(tick);
+        SmallDemoFormat.Position floorTick = demo.positions.lower(tmpPos);
+        SmallDemoFormat.Position ceilingTick = demo.positions.ceiling(tmpPos);
+
+        if (floorTick == null && ceilingTick == null)
+            throw new IllegalArgumentException("no ticks found in this demo");
+        else if (floorTick == null)
+            positions = ceilingTick.locations[0];
+        else if (ceilingTick == null)
+            positions = floorTick.locations[0];
+
+        if (positions == null) {
+            switch (interpType) {
+                case NONE:
+                default:
+                    positions = floorTick.locations[0];
+                    break;
+                case LINEAR:
+                    positions = new double[3];
+                    float lerpFactor = (tick - floorTick.tick) / (ceilingTick.tick - floorTick.tick); // how far the current tick is from floorTick to ceilingTick [0,1]
+                    for (int i = 0; i < 3; i++)
+                        positions[i] = floorTick.locations[0][i] * (1 - lerpFactor) + ceilingTick.locations[0][i] * lerpFactor;
+                    break;
             }
         }
-        if (pos != null) {
-            float demoX = (float) pos.locations[0][0];
-            float demoY = (float) pos.locations[0][1];
-            float demoZ = (float) pos.locations[0][2];
-            x = mapper.getScreenX(demoX, demoY, demoZ);
-            y = mapper.getScreenY(demoX, demoY, demoZ);
-        }
+        x = mapper.getScreenX((float)positions[0], (float)positions[1], (float)positions[2]);
+        y = mapper.getScreenY((float)positions[0], (float)positions[1], (float)positions[2]);
     }
 
 
@@ -171,5 +183,10 @@ public class Player implements Drawable {
         PLAYER_NAME_IF_NO_AVATAR,
         DEMO_NAME_IF_NO_AVATAR,
         DEMO_AND_PLAYER_NAME_IF_NO_AVATAR
+    }
+
+    public enum InterpType {
+        NONE,
+        LINEAR
     }
 }

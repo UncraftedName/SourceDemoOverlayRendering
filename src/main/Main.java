@@ -34,6 +34,7 @@ public class Main extends PApplet {
     public static final float hostFramerate = 0;
     public static final boolean render = false;
     public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
+    public static final Player.InterpType interpType = Player.InterpType.LINEAR;
     public static final float playerDiameter = 55; // pixels
     public static final String renderOutputFolder = "img/render output";
     public static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
@@ -144,7 +145,7 @@ public class Main extends PApplet {
         System.out.println("parsing demos...");
         smallDemoFormats = PositionManager.demosFromPaths(demoPaths);
         Arrays.stream(smallDemoFormats).forEach(smallDemoFormat -> drawables.add(
-                new Player(this, smallDemoFormat, playerDiameter, textSetting, mapper)));
+                new Player(this, smallDemoFormat, playerDiameter, textSetting, interpType, mapper)));
         if (!render)
             drawables.add(new SpeedArrow(this));
         img = loadImage(imgPath);

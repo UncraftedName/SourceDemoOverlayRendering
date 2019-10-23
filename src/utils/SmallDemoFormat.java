@@ -1,16 +1,16 @@
 package utils;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 public class SmallDemoFormat {
 
     public final String demoName;
     public final String playerNameInDemo;
-    public final ArrayList<Position> positions; // positions for every player
+    public final TreeSet<Position> positions = new TreeSet<>(Position.tickComparator); // positions for every player, sorted by tick
     public final int maxTick;
 
 
@@ -31,7 +31,6 @@ public class SmallDemoFormat {
         InputStream parserOutput = Runtime.getRuntime().exec(
                 new String[]{"resource/UncraftedDemoParser.exe", demoPath, "-p"}).getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(parserOutput));
-        positions = new ArrayList<>();
         // read the lines of the parser output and add the positions to the position list
         reader.lines().filter(s -> s.length() > 0 && s.charAt(0) == '|').forEach(s -> { // |tick|~|x1,y1,z1|p1,y1,r1|~|x2,y2,z2|p2,y2,r2|...
             String[] tickAndPlayers = s.split("~");
@@ -51,7 +50,7 @@ public class SmallDemoFormat {
             }
         });
         //noinspection OptionalGetWithoutIsPresent
-        maxTick = positions.stream().mapToInt(position -> position.tick).max().getAsInt();
+        maxTick = (int) positions.stream().mapToDouble(position -> position.tick).max().getAsDouble();
     }
 
 
@@ -71,16 +70,25 @@ public class SmallDemoFormat {
 
     public static class Position {
 
-        public final int tick;
+        static final Comparator<Position> tickComparator = (o1, o2) -> Float.compare(o1.tick, o2.tick);
+
+        public final float tick;
         // [player][loc/ang]
         // internally the demos will use floats, but java only has double streams
         public final double[][] locations; // x, y, z
         public final double[][] viewAngles; // pitch, yaw, roll
 
+
         public Position(int tick, double[][] locations, double[][] viewAngles) {
             this.tick = tick;
             this.locations = locations;
             this.viewAngles = viewAngles;
+        }
+
+
+        public Position(float tick) { // for searching the tree set
+            this.tick = tick;
+            locations = viewAngles = null;
         }
     }
 }
