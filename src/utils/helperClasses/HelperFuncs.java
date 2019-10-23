@@ -1,5 +1,8 @@
 package utils.helperClasses;
 
+import processing.core.PApplet;
+import processing.core.PImage;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
@@ -33,5 +36,10 @@ public class HelperFuncs {
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         WritableRaster raster = bi.copyData(null);
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
+
+    public static double roundToPlaces(double n, int places) {
+        return Math.round(n * Math.pow(10, places)) / Math.pow(10, places);
     }
 }

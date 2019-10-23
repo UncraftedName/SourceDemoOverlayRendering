@@ -1,8 +1,8 @@
 package graphics;
 
+import main.Main;
 import processing.core.PApplet;
 import processing.core.PConstants;
-import processing.core.PGraphics;
 import processing.core.PImage;
 
 public class GameLocation extends Selectable {
@@ -42,7 +42,7 @@ public class GameLocation extends Selectable {
     }
 
     @Override
-    public void draw(PGraphics canvas, float scaleFactor, float transX, float transY) {
+    public void draw(Main canvas) {
         canvas.pushStyle();
         canvas.colorMode(PConstants.RGB, 255);
         canvas.imageMode(PConstants.CENTER);

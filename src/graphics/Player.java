@@ -1,9 +1,9 @@
 package graphics;
 
+import main.Main;
 import playerInfo.PlayerIcon;
 import processing.core.PApplet;
 import processing.core.PConstants;
-import processing.core.PGraphics;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
 import utils.SmallDemoFormat;
@@ -23,7 +23,7 @@ public class Player implements Drawable {
     private final float diameter;
     private final TextSetting textSetting;
     private final PImage img;
-    public float x, y;
+    private float x, y;
     private final DemoToImageMapper.WarpedMapper mapper;
     public boolean invisible;
     private final boolean defaultAvatar;
@@ -94,7 +94,8 @@ public class Player implements Drawable {
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
     @Override // scale & translation are ignored
-    public void draw(PGraphics canvas, float scaleFactor, float transX, float transY) {
+    public void draw(Main canvas) {
+        setCoords(canvas.currentTick);
         if (!invisible) {
             canvas.pushStyle();
             canvas.imageMode(PConstants.CENTER);
@@ -139,7 +140,7 @@ public class Player implements Drawable {
     }
 
 
-    public void setCoords(float tick) {
+    private void setCoords(float tick) {
         int intTick = (int)tick; // for now, will do interp later
         if (intTick > demo.maxTick) {
             invisible = true;

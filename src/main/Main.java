@@ -2,10 +2,11 @@ package main;
 
 import graphics.Drawable;
 import graphics.Player;
+import graphics.SpeedArrow;
 import processing.core.PApplet;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
-import utils.FFMPEGWriter;
+import utils.helperClasses.FFMPEGWriter;
 import utils.helperClasses.threading.BlockingThreadPoolExecutor;
 import utils.helperClasses.HelperFuncs;
 import utils.PositionManager;
@@ -13,6 +14,7 @@ import utils.SmallDemoFormat;
 import utils.helperClasses.threading.ImageSaver;
 
 import javax.imageio.ImageIO;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -23,32 +25,35 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
+@SuppressWarnings("WeakerAccess")
 public class Main extends PApplet {
 
-    private static final String demoPath = "demos/cm/08 - uncrafted"; // can be file or folder; if folder then search is recursive
-    private static final String imgPath = "img/levels/top/08.png";
-    private static final float hostFramerate = 60;
-    private static final boolean render = true;
-    private static final Player.TextSetting textSetting = Player.TextSetting.NONE;
-    private static final float playerDiameter = 55; // pixels
-    private static final String renderOutputFolder = "img/render output";
-    private static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
+    public static final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
+    public static final String imgPath = "img/levels/top/08.png";
+    public static final float hostFramerate = 0;
+    public static final boolean render = false;
+    public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
+    public static final float playerDiameter = 55; // pixels
+    public static final String renderOutputFolder = "img/render output";
+    public static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
+    public float hostTimeScale = 1;
 
     // don't modify
-    private List<Drawable> drawables = new ArrayList<>();
-    private SmallDemoFormat[] smallDemoFormats;
-    private PImage img;
-    private DemoToImageMapper.WarpedMapper mapper;
-    private String[] demoPaths;
-    private long timeAtBeginDraw;
-    private BlockingThreadPoolExecutor executor;
-    private int maxLength;
-    private boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
-    private float hostTimeScale = 1;
-    private Timer timer; // prints stats while rendering/deleting
-    private TimerTask renderTimerTask = new TimerTask() {
+    public List<Drawable> drawables = new ArrayList<>();
+    public SmallDemoFormat[] smallDemoFormats;
+    public PImage img;
+    public DemoToImageMapper.WarpedMapper mapper;
+    public String[] demoPaths;
+    public long timeAtListKeyFrame;
+    public float tickAtLastKeyFrame = 0;
+    public float currentTick;
+    public boolean paused = false;
+    public BlockingThreadPoolExecutor executor;
+    public int maxLength;
+    public boolean stopNextFrame = false; // ensures the last frame w/o anybody in it is drawn
+    public Timer timer; // prints stats while rendering/deleting
+    public TimerTask renderTimerTask = new TimerTask() {
         @Override
         public void run() {
             System.out.println(String.format("frames processed: %d/%d, queue size: %d/%d, threads active: %d/%d",
@@ -137,6 +142,8 @@ public class Main extends PApplet {
         smallDemoFormats = PositionManager.demosFromPaths(demoPaths);
         Arrays.stream(smallDemoFormats).forEach(smallDemoFormat -> drawables.add(
                 new Player(this, smallDemoFormat, playerDiameter, textSetting, mapper)));
+        if (!render)
+            drawables.add(new SpeedArrow(this));
         img = loadImage(imgPath);
         if (mapper.shrinkX) // resize the image so I don't have to constantly resize it in draw
             img.resize((int) (img.width * mapper.shrinkRatio), img.height);
@@ -166,14 +173,15 @@ public class Main extends PApplet {
     @Override
     public void draw() {
         if (frameCount == 1)
-            timeAtBeginDraw = System.currentTimeMillis();
+            timeAtListKeyFrame = System.currentTimeMillis();
         image(img, 0, 0);
-        float tick = (hostFramerate <= 0 ?
-                ((System.currentTimeMillis() - timeAtBeginDraw) / 1000f * 66)
-                : (frameCount * 66f / hostFramerate));
+        if (!paused) {
+            currentTick = (hostFramerate <= 0 ?
+                    tickAtLastKeyFrame + ((System.currentTimeMillis() - timeAtListKeyFrame) / 1000f * 66 * hostTimeScale)
+                    : (frameCount * 66f / hostFramerate));
+        }
 
-        HelperFuncs.filterForType(drawables.stream(), Player.class).forEach(player -> player.setCoords(tick));
-        drawables.forEach(drawable -> drawable.draw(this.g, 1, 0, 0));
+        drawables.forEach(drawable -> drawable.draw(this));
 
         if (render) {
             if (stopNextFrame) {
@@ -194,6 +202,44 @@ public class Main extends PApplet {
                 // if all players are invisible, the next frame will not be rendering (image is only displayed when draw is finished)
                 stopNextFrame = HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible);
             }
+        }
+    }
+
+
+    @Override
+    public void keyPressed() {
+        //noinspection ConstantConditions
+        if (hostFramerate == 0) {
+            switch (keyCode) {
+                case KeyEvent.VK_SPACE:
+                case KeyEvent.VK_NUMPAD5:
+                    paused ^= true;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_KP_RIGHT:
+                case KeyEvent.VK_D:
+                    if (Math.abs(hostTimeScale) < 10000f)
+                        hostTimeScale *= 1.2f;
+                    break;
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_KP_LEFT:
+                case KeyEvent.VK_A:
+                    if (Math.abs(hostTimeScale) > 0.01f)
+                        hostTimeScale /= 1.2f;
+                    break;
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_KP_UP:
+                case KeyEvent.VK_W:
+                    hostTimeScale = Math.abs(hostTimeScale);
+                    break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_KP_DOWN:
+                case KeyEvent.VK_S:
+                    hostTimeScale = -Math.abs(hostTimeScale);
+                    break;
+            }
+            timeAtListKeyFrame = System.currentTimeMillis();
+            tickAtLastKeyFrame = currentTick;
         }
     }
 

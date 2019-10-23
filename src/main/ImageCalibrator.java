@@ -127,7 +127,7 @@ public class ImageCalibrator extends PApplet {
             }
         }
         HelperFuncs.reverseStream(drawables.stream())
-                .forEach(drawable -> drawable.draw(this.g, currentZoom, displayOffsetX, displayOffsetY));
+                .forEach(drawable -> drawable.draw(this, currentZoom, displayOffsetX, displayOffsetY));
         if (saveTextMillis > 0) {
             translate(-displayOffsetX, -displayOffsetY);
             scale(1 / currentZoom);

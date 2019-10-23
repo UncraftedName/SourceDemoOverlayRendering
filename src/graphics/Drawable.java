@@ -1,12 +1,15 @@
 package graphics;
 
+import main.ImageCalibrator;
+import main.Main;
 import processing.core.PApplet;
-import processing.core.PGraphics;
 
 public interface Drawable {
 
 
-    void draw(PGraphics canvas, float scaleFactor, float transX, float transY);
+    default void draw(ImageCalibrator calibrator, float scaleFactor, float transX, float transY) {}
+
+    default void draw(Main canvas) {}
 
     default void mousePressed(PApplet applet, float scaleFactor, float transX, float transY) {}
 

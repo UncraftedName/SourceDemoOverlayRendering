@@ -1,4 +1,4 @@
-package utils;
+package utils.helperClasses;
 
 import utils.helperClasses.threading.ImageSaver;
 
