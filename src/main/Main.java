@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings("WeakerAccess")
 public class Main extends PApplet {
 
-    public static final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
-    public static final String imgPath = "img/levels/top/08.png";
+    public static final String demoPath = "demos/cm/10"; // can be file or folder; if folder then search is recursive
+    public static final String imgPath = "img/levels/top/10.png";
     public static final float hostFramerate = 0;
     public static final boolean render = false;
     public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
@@ -154,8 +154,7 @@ public class Main extends PApplet {
         else
             img.resize(img.width, (int) (img.height * mapper.shrinkRatio));
 
-        //noinspection OptionalGetWithoutIsPresent
-        maxLength = Arrays.stream(smallDemoFormats).mapToInt(demo -> demo.maxTick).max().getAsInt();
+        maxLength = Arrays.stream(smallDemoFormats).mapToInt(demo -> demo.maxTick).max().orElse(1);
         System.out.println("max demo length in ticks: " + maxLength);
 
         if (render) {

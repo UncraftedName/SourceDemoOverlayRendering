@@ -39,6 +39,9 @@ public class SpeedArrow implements Drawable {
             canvas.image(backwardsPlaybackImg, 0, canvas.height - diameter);
         canvas.textSize(30);
         canvas.text("Speed: " + HelperFuncs.roundToPlaces(canvas.hostTimeScale, 3), 0, canvas.height - diameter);
-        canvas.text("Tick: " + HelperFuncs.roundToPlaces(canvas.currentTick, 1), 0, canvas.height - diameter - 30);
+        if (Main.interpType == Player.InterpType.NONE)
+            canvas.text("Tick: " + (int)canvas.currentTick, 0, canvas.height - diameter - 30);
+        else
+            canvas.text("Tick: " + HelperFuncs.roundToPlaces(canvas.currentTick, 1), 0, canvas.height - diameter - 30);
     }
 }

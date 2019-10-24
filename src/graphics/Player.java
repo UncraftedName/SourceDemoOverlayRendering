@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class Player implements Drawable {
 
     private final static float textScale = .3f;
+    private final static float linearThreshold = 100; // if two ticks are apart by this much or more, no interp is done
     // these maps are stored to not have to load the same player from multiple demos
     private static HashMap<String, PImage> playerToImgMap = new HashMap<>();
     private static HashMap<String, Integer> playerToTextColorMapper = new HashMap<>();
@@ -158,15 +159,15 @@ public class Player implements Drawable {
 
         if (positions == null) {
             switch (interpType) {
-                case NONE:
-                default:
-                    positions = floorTick.locations[0];
-                    break;
                 case LINEAR:
                     positions = new double[3];
                     float lerpFactor = (tick - floorTick.tick) / (ceilingTick.tick - floorTick.tick); // how far the current tick is from floorTick to ceilingTick [0,1]
                     for (int i = 0; i < 3; i++)
                         positions[i] = floorTick.locations[0][i] * (1 - lerpFactor) + ceilingTick.locations[0][i] * lerpFactor;
+                    break;
+                case NONE:
+                default:
+                    positions = floorTick.locations[0];
                     break;
             }
         }
@@ -187,6 +188,7 @@ public class Player implements Drawable {
 
     public enum InterpType {
         NONE,
-        LINEAR
+        LINEAR,
+        LINEAR_THRESHOLD
     }
 }

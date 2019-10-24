@@ -124,10 +124,12 @@ public class DemoToImageMapper {
 
         public WarpedMapper() {
             DemoToImageMapper baseMapper = DemoToImageMapper.this; // outer class instance
-            shrinkRatio = Math.abs(Math.min(baseMapper.xRatio, baseMapper.yRatio)
-                    / Math.max(baseMapper.xRatio, baseMapper.yRatio));
+            float absXRatio = Math.abs(baseMapper.xRatio);
+            float absYRatio = Math.abs(baseMapper.yRatio);
+            shrinkRatio = Math.min(absXRatio, absYRatio)
+                    / Math.max(absXRatio, absYRatio);
             
-            shrinkX = baseMapper.xRatio > baseMapper.yRatio;
+            shrinkX = absXRatio > absYRatio;
             if (shrinkX) {
                 screenX0 = baseMapper.screenX0 * shrinkRatio;
                 screenY0 = baseMapper.screenY0;
