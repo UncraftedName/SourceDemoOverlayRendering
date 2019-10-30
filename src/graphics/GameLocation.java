@@ -1,6 +1,6 @@
 package graphics;
 
-import main.Main;
+import main.ImageCalibrator;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PImage;
@@ -42,7 +42,7 @@ public class GameLocation extends Selectable {
     }
 
     @Override
-    public void draw(Main canvas) {
+    public void draw(ImageCalibrator canvas, float scaleFactor, float transX, float transY) {
         canvas.pushStyle();
         canvas.colorMode(PConstants.RGB, 255);
         canvas.imageMode(PConstants.CENTER);

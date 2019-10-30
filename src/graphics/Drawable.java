@@ -7,7 +7,7 @@ import processing.core.PApplet;
 public interface Drawable {
 
 
-    default void draw(ImageCalibrator calibrator, float scaleFactor, float transX, float transY) {}
+    default void draw(ImageCalibrator canvas, float scaleFactor, float transX, float transY) {}
 
     default void draw(Main canvas) {}
 

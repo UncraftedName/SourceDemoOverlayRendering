@@ -18,7 +18,8 @@ public enum PlayerIcon {
     No_Ire_Cat("https://cdn.discordapp.com/avatars/83025241139318784/ac0328c2f6b95f4687c14283c551975c.png?size=512"),
     Toad("https://cdn.discordapp.com/avatars/90511350039601152/b499156092e0f3eefb27cc87a766f540.png?size=512"),
     NuSa("https://cdn.discordapp.com/avatars/173839555303178240/cad99646a97c59bddc5fda543e9779a3.webp?size=512"),
-    Pr0tal_Player("https://cdn.discordapp.com/avatars/251989047709270018/311306106039ef97e16f164d5150eff3.png?size=512"),
+    Pr0tal_Player("img/icons/players/Pr0tal.png"),
+    Pr0tal(Pr0tal_Player.uri),
     maltemller("https://cdn.discordapp.com/avatars/286997284422418433/4e07d866652526a0e8f62b22aa3a6565.webp?size=512"),
     XeiZ("https://cdn.discordapp.com/avatars/84334020552302592/f5cca5a0f050ede48d47e13c942d96ac.webp?size=512"),
     HellSt0ne("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"),
@@ -38,7 +39,8 @@ public enum PlayerIcon {
     BANANA_BOYE("https://cdn.discordapp.com/avatars/156921823341051904/e9dc8657e70438541713eab80e8a7574.webp?size=512"),
     FluffyGMD("https://cdn.discordapp.com/avatars/289964246643769344/09d0785fecd0bbaca40c91e78726d4d2.webp?size=512"),
     calamity("https://cdn.discordapp.com/avatars/317041055688163338/25c80d3b9ce6288062f4ade8bbc8623d.webp?size=512"),
-    Blaziken("https://cdn.discordapp.com/avatars/118377655799250953/8ba3fefa197ce1d0c81a0d5c298e5db5.webp?size=512");
+    Blaziken("https://cdn.discordapp.com/avatars/118377655799250953/8ba3fefa197ce1d0c81a0d5c298e5db5.webp?size=512"),
+    Sealow("https://discordapp.com/assets/322c936a8c8be1b803cd94861bdfa868.png");
 
 
     public static final String DEFAULT_URI = "img/icons/sanic.png";

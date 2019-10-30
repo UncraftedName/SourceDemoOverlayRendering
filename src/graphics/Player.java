@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class Player implements Drawable {
 
     private final static float textScale = .3f;
-    private final static float linearThreshold = 100; // if two ticks are apart by this much or more, no interp is done
+    private final static float linearThreshold = 62.518f; // if two ticks are apart by this much or more, no interp is done
     // these maps are stored to not have to load the same player from multiple demos
     private static HashMap<String, PImage> playerToImgMap = new HashMap<>();
     private static HashMap<String, Integer> playerToTextColorMapper = new HashMap<>();
@@ -24,7 +24,7 @@ public class Player implements Drawable {
     private final float diameter;
     private final TextSetting textSetting;
     private final InterpType interpType;
-    private final PImage img;
+    private final PImage playerImg;
     private float x, y;
     private final DemoToImageMapper.WarpedMapper mapper;
     public boolean invisible;
@@ -43,7 +43,7 @@ public class Player implements Drawable {
         invisible = false;
         if (playerToImgMap.containsKey(demo.playerNameInDemo)) {
             System.out.println("copied avatar for \"" + demo.playerNameInDemo + "\" in demo \"" + demo.demoName + ".dem\"");
-            img = playerToImgMap.get(demo.playerNameInDemo);
+            playerImg = playerToImgMap.get(demo.playerNameInDemo);
             textColor = playerToTextColorMapper.get(demo.playerNameInDemo);
             defaultAvatar = playerUsesDefaultAvatar.get(demo.playerNameInDemo);
         } else {
@@ -60,23 +60,23 @@ public class Player implements Drawable {
             if (loadedImage == null) {
                 System.out.println("no avatar found for \"" + demo.playerNameInDemo + "\" in demo \"" + demo.demoName + ".dem\"");
                 defaultAvatar = true;
-                img = applet.loadImage("img/icons/sanic.png");
+                playerImg = applet.loadImage("img/icons/sanic.png");
                 textColor = applet.color(50, 80, 255); // default text color
             } else {
                 System.out.println("set avatar for \"" + demo.playerNameInDemo + "\" in demo \"" + demo.demoName + "\"");
                 defaultAvatar = false;
                 int minDim = Math.min(loadedImage.width, loadedImage.height);
-                img = new PImage(minDim, minDim, PConstants.ARGB);
+                playerImg = new PImage(minDim, minDim, PConstants.ARGB);
                 loadedImage.loadPixels();
-                img.loadPixels();
+                playerImg.loadPixels();
                 double r = 0, g = 0, b = 0;
                 for (int i = 0; i < minDim * minDim; i++) { // manually get a circular selection of the image
                     int x = i % minDim;
                     int y = i / minDim;
                     if (Math.sqrt((x - (minDim >> 1)) * (x - (minDim >> 1)) + (y - (minDim >> 1)) * (y - (minDim >> 1))) < minDim >> 1) // if pixel is in circle
-                        img.pixels[i] = loadedImage.pixels[i];
+                        playerImg.pixels[i] = loadedImage.pixels[i];
                     else
-                        img.pixels[i] = applet.color(0, 0);
+                        playerImg.pixels[i] = applet.color(0, 0);
                     // kind of sort of attempt to fix some dark profile pictures; will improve upon this
                     // f(x) = exp(-x/50 + 1.5) + 1
                     // correction(x) = (x+10)f(x)
@@ -85,10 +85,10 @@ public class Player implements Drawable {
                     b += Math.min(255, (Math.exp(applet.blue(loadedImage.pixels[i]) / -50f + 1.5f) + 1.0f)) * (8 + applet.blue(loadedImage.pixels[i]));
                 }
                 // set to the average of the image
-                textColor = applet.color((float) r / img.pixels.length, (float) g / img.pixels.length, (float) b / img.pixels.length);
-                img.updatePixels();
+                textColor = applet.color((float) r / playerImg.pixels.length, (float) g / playerImg.pixels.length, (float) b / playerImg.pixels.length);
+                playerImg.updatePixels();
             }
-            playerToImgMap.put(demo.playerNameInDemo, img);
+            playerToImgMap.put(demo.playerNameInDemo, playerImg);
             playerToTextColorMapper.put(demo.playerNameInDemo, textColor);
             playerUsesDefaultAvatar.put(demo.playerNameInDemo, defaultAvatar);
         }
@@ -98,11 +98,12 @@ public class Player implements Drawable {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     @Override // scale & translation are ignored
     public void draw(Main canvas) {
-        setCoords(canvas.currentTick);
+        invisible = canvas.currentTick > demo.maxTick || canvas.currentTick < 0;
         if (!invisible) {
+            setCoords(canvas.currentTick);
             canvas.pushStyle();
             canvas.imageMode(PConstants.CENTER);
-            canvas.image(img, x, y, diameter, diameter);
+            canvas.image(playerImg, x, y, diameter, diameter);
             canvas.textSize(textSize);
             boolean showPlayerName = false, showDemoName = false;
             switch (textSetting) {
@@ -142,7 +143,6 @@ public class Player implements Drawable {
         }
     }
 
-
     @SuppressWarnings("ConstantConditions")
     private void setCoords(float tick) {
         double[] positions = null;
@@ -151,7 +151,7 @@ public class Player implements Drawable {
         SmallDemoFormat.Position ceilingTick = demo.positions.ceiling(tmpPos);
 
         if (floorTick == null && ceilingTick == null)
-            throw new IllegalArgumentException("no ticks found in this demo");
+            throw new IllegalArgumentException("no ticks found in " + demo.demoName);
         else if (floorTick == null)
             positions = ceilingTick.locations[0];
         else if (ceilingTick == null)
@@ -159,6 +159,12 @@ public class Player implements Drawable {
 
         if (positions == null) {
             switch (interpType) {
+                case LINEAR_THRESHOLD:
+                    // if the position is greater than some threshold, don't interp
+                    if (SmallDemoFormat.Position.distance(floorTick, ceilingTick, 0) / (ceilingTick.tick - floorTick.tick) > linearThreshold) {
+                        positions = floorTick.locations[0];
+                        break;
+                    }
                 case LINEAR:
                     positions = new double[3];
                     float lerpFactor = (tick - floorTick.tick) / (ceilingTick.tick - floorTick.tick); // how far the current tick is from floorTick to ceilingTick [0,1]
@@ -189,6 +195,6 @@ public class Player implements Drawable {
     public enum InterpType {
         NONE,
         LINEAR,
-        LINEAR_THRESHOLD
+        LINEAR_THRESHOLD // don't interp if the pos jumps by more than ~63 units, ideally should also use velocity
     }
 }

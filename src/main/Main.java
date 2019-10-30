@@ -29,13 +29,13 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings("WeakerAccess")
 public class Main extends PApplet {
 
-    public static final String demoPath = "demos/cm/10"; // can be file or folder; if folder then search is recursive
-    public static final String imgPath = "img/levels/top/10.png";
-    public static final float hostFramerate = 0;
+    public static final String demoPath = "demos/cm/14"; // can be file or folder; if folder then search is recursive
+    public static final String imgPath = "img/levels/side/14-y.png";
+    public static final float hostFramerate = 0; // if you want to convert to gif use multiples of 100 (100,50,25,etc.)
     public static final boolean render = false;
     public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
-    public static final Player.InterpType interpType = Player.InterpType.LINEAR;
-    public static final float playerDiameter = 55; // pixels
+    public static final Player.InterpType interpType = Player.InterpType.LINEAR_THRESHOLD;
+    public static final float playerDiameter = 60; // pixels
     public static final String renderOutputFolder = "img/render output";
     public static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
     public float hostTimeScale = 1;

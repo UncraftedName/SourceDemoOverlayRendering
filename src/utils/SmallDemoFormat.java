@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.TreeSet;
 
 public class SmallDemoFormat {
@@ -51,6 +52,25 @@ public class SmallDemoFormat {
         });
         //noinspection OptionalGetWithoutIsPresent
         maxTick = (int) positions.stream().mapToDouble(position -> position.tick).max().getAsDouble();
+        populateVelocities();
+    }
+
+
+    private void populateVelocities() {
+        Iterator<Position> positionIterator = positions.iterator();
+        Position previous = null, current = positionIterator.next();
+        while (positionIterator.hasNext()) {
+            previous = current;
+            current = positionIterator.next();
+            for (int player = 0; player < previous.locations.length; player++)
+                for (int component = 0; component < previous.locations[0].length; component++)
+                    previous.velocities[player][component] = (current.locations[player][component] - previous.locations[player][component]) / (current.tick - previous.tick);
+        }
+        // last element is a  special case
+        //noinspection ConstantConditions
+        for (int player = 0; player < previous.locations.length; player++)
+            for (int component = 0; component < previous.locations[0].length; component++)
+                current.velocities[player][component] = (current.locations[player][component] - previous.locations[player][component]) / (current.tick - previous.tick);
     }
 
 
@@ -77,18 +97,29 @@ public class SmallDemoFormat {
         // internally the demos will use floats, but java only has double streams
         public final double[][] locations; // x, y, z
         public final double[][] viewAngles; // pitch, yaw, roll
+        public final double[][] velocities; // x, y, z
 
 
         public Position(int tick, double[][] locations, double[][] viewAngles) {
             this.tick = tick;
             this.locations = locations;
             this.viewAngles = viewAngles;
+            // just initialize, populate once all the entire demo has been parsed and all the positions are known
+            velocities = new double[locations.length][locations[0].length];
         }
 
 
         public Position(float tick) { // for searching the tree set
             this.tick = tick;
-            locations = viewAngles = null;
+            locations = viewAngles = velocities = null;
+        }
+
+
+        public static double distance(Position p1, Position p2, int player) {
+            double tmpSum = 0;
+            for (int i = 0; i < 3; i++)
+                tmpSum += (p1.locations[player][i] - p2.locations[player][i]) * (p1.locations[player][i] - p2.locations[player][i]);
+            return Math.sqrt(tmpSum);
         }
     }
 }
