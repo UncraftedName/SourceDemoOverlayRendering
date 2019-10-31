@@ -1,5 +1,6 @@
 package main;
 
+import graphics.DraggableSelection;
 import graphics.Drawable;
 import graphics.Player;
 import graphics.SpeedArrow;
@@ -29,8 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings("WeakerAccess")
 public class Main extends PApplet {
 
-    public static final String demoPath = "demos/cm/14"; // can be file or folder; if folder then search is recursive
-    public static final String imgPath = "img/levels/side/14-y.png";
+    public static final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
+    public static final String imgPath = "img/levels/top/08.png";
     public static final float hostFramerate = 0; // if you want to convert to gif use multiples of 100 (100,50,25,etc.)
     public static final boolean render = false;
     public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
@@ -146,8 +147,10 @@ public class Main extends PApplet {
         smallDemoFormats = PositionManager.demosFromPaths(demoPaths);
         Arrays.stream(smallDemoFormats).forEach(smallDemoFormat -> drawables.add(
                 new Player(this, smallDemoFormat, playerDiameter, textSetting, interpType, mapper)));
-        if (!render)
+        if (!render) {
             drawables.add(new SpeedArrow(this));
+            drawables.add(new DraggableSelection(this)); // must be added after players
+        }
         img = loadImage(imgPath);
         if (mapper.shrinkX) // resize the image so I don't have to constantly resize it in draw
             img.resize((int) (img.width * mapper.shrinkRatio), img.height);
@@ -246,6 +249,24 @@ public class Main extends PApplet {
             }
             setNextFrameAsKeyFrame = true;
         }
+    }
+
+
+    @Override
+    public void mousePressed() {
+        drawables.forEach(drawable -> drawable.mousePressed(this, 1, 0, 0));
+    }
+
+
+    @Override
+    public void mouseReleased() {
+        drawables.forEach(drawable -> drawable.mouseReleased(this, 1, 0, 0));
+    }
+
+
+    @Override
+    public void mouseDragged() {
+        drawables.forEach(drawable -> drawable.mouseDragged(this, 1, 0, 0));
     }
 
 

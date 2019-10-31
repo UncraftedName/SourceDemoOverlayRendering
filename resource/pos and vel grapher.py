@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-path = r'..\demos\cm\14'
+path = r'..\demos\cm\08 - uncrafted'
 graph_velocities = False
 # color_palette = plt.get_cmap("tab10").colors
 color_palette = sns.color_palette("husl")

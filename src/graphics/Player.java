@@ -15,22 +15,24 @@ public class Player implements Drawable {
 
     private final static float textScale = .3f;
     private final static float linearThreshold = 62.518f; // if two ticks are apart by this much or more, no interp is done
+    private final static int backgroundCircleScale = 6; // how much larger the background circle is than the player (in pixels)
     // these maps are stored to not have to load the same player from multiple demos
     private static HashMap<String, PImage> playerToImgMap = new HashMap<>();
     private static HashMap<String, Integer> playerToTextColorMapper = new HashMap<>();
     private static HashMap<String, Boolean> playerUsesDefaultAvatar = new HashMap<>(); // bleh
 
-    private final SmallDemoFormat demo;
+    public final SmallDemoFormat demo;
     private final float diameter;
     private final TextSetting textSetting;
     private final InterpType interpType;
     private final PImage playerImg;
-    private float x, y;
+    public float x, y;
     private final DemoToImageMapper.WarpedMapper mapper;
     public boolean invisible;
     private final boolean defaultAvatar;
     private final float textSize;
     private final int textColor;
+    int backgroundColor = 0; // starts completely transparent, this field is used exclusively by DraggableSelection right now
 
 
     public Player(PApplet applet, SmallDemoFormat demo, float diameter, TextSetting setting, InterpType interpType, DemoToImageMapper.WarpedMapper mapper) {
@@ -102,6 +104,11 @@ public class Player implements Drawable {
         if (!invisible) {
             setCoords(canvas.currentTick);
             canvas.pushStyle();
+            if (backgroundColor != 0) {
+                canvas.strokeWeight(0);
+                canvas.fill(backgroundColor);
+                canvas.circle(x, y, diameter + backgroundCircleScale);
+            }
             canvas.imageMode(PConstants.CENTER);
             canvas.image(playerImg, x, y, diameter, diameter);
             canvas.textSize(textSize);
