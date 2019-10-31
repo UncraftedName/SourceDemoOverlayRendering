@@ -6,6 +6,8 @@ Currently this will only display the locations of player 1 from the demo.
 Eventually I will add real instructions on how to use this, for now here's a gif and a picture of what can be generated using this project. Chamber 14 il's:
 ![](github-things/chmb-14.gif)
 ![](github-things/chmb-14.png)
+A preview of some of the mechanics I want to add, (hopefully there will be more soon).
+![](github-things/08-selection-preview.gif)
 
 To run this you will need Java 12, (I think, idk how java versions work anymore) and processing (v. 3.5.3).
 That can be found here: https://processing.org/download/
