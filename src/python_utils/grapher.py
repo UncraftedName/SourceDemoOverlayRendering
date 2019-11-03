@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-path = r'..\demos\cm\08 - uncrafted'
+path = r'..\..\demos\cm\08 - uncrafted'
 graph_velocities = False
 # color_palette = plt.get_cmap("tab10").colors
 color_palette = sns.color_palette("husl")
@@ -29,7 +29,7 @@ class Demo:
     def __init__(self, demo_file):
         self.demo_file = demo_file
         parser_result = subprocess.check_output(
-            ("UncraftedDemoParser.exe", demo_file, "-p", "-R"), stderr=subprocess.STDOUT).decode("ascii")
+            ("../../resource/UncraftedDemoParser.exe", demo_file, "-p", "-R"), stderr=subprocess.STDOUT).decode("ascii")
         self.positions = []
         for line in parser_result.split('\n'):
             if position_matcher.match(line):
@@ -67,10 +67,14 @@ else:
             if file.endswith(".dem"):
                 try:
                     demos.append(Demo(os.path.join(root, file)))
+                    print('parsed ' + file)
                 except FileNotFoundError:
-                    print("skipping demo " + file)
+                    print("skipping demo " + os.path.abspath(os.path.join(root, file)))
 
 print(str(len(demos)) + ' demos loaded')
+if len(demos) is 0:
+    exit(0)
+
 demos.sort(key=lambda x: x.demo_file)
 
 fig, axs = plt.subplots(nrows=3, ncols=2 if graph_velocities else 1, sharex='all')

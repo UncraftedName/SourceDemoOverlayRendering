@@ -19,7 +19,6 @@ public enum PlayerIcon {
     Toad("https://cdn.discordapp.com/avatars/90511350039601152/b499156092e0f3eefb27cc87a766f540.png?size=512"),
     NuSa("https://cdn.discordapp.com/avatars/173839555303178240/cad99646a97c59bddc5fda543e9779a3.webp?size=512"),
     Pr0tal_Player("img/icons/players/Pr0tal.png"),
-    Pr0tal(Pr0tal_Player.uri),
     maltemller("https://cdn.discordapp.com/avatars/286997284422418433/4e07d866652526a0e8f62b22aa3a6565.webp?size=512"),
     XeiZ("https://cdn.discordapp.com/avatars/84334020552302592/f5cca5a0f050ede48d47e13c942d96ac.webp?size=512"),
     HellSt0ne("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"),
