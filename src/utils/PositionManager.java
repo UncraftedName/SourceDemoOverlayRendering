@@ -5,12 +5,12 @@ import java.util.*;
 
 public class PositionManager {
 
-    public static SmallDemoFormat[] demosFromPaths(String[] demoPaths) {
-        List<SmallDemoFormat> smallDemos = new ArrayList<>();
-        // parallel increases speed by ~5x for large amounts of demos
+    public static Demo[] demosFromPaths(String[] demoPaths) {
+        List<Demo> demos = new ArrayList<>();
+        // parallel increases speed by ~5x for large amounts of demos; TODO use thread pool executor
         Arrays.stream(demoPaths).parallel().forEach(demoPath -> {
             try {
-                smallDemos.add(new SmallDemoFormat(demoPath));
+                demos.add(new Demo(demoPath));
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(-2);
@@ -20,8 +20,8 @@ public class PositionManager {
             }
         });
         // sort the demos based on length so the faster ones are displayed first
-        smallDemos.sort(Comparator.comparingInt(o -> o.maxTick));
-        Collections.reverse(smallDemos);
-        return smallDemos.toArray(new SmallDemoFormat[0]);
+        demos.sort(Comparator.comparingInt(o -> o.maxTick));
+        Collections.reverse(demos);
+        return demos.toArray(new Demo[0]);
     }
 }

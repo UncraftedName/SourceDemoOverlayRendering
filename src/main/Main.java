@@ -3,7 +3,7 @@ package main;
 import graphics.DraggableSelection;
 import graphics.Drawable;
 import graphics.Player;
-import graphics.SpeedArrow;
+import graphics.PlaybackSpeedArrow;
 import processing.core.PApplet;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
@@ -11,7 +11,7 @@ import utils.helperClasses.FFMPEGWriter;
 import utils.helperClasses.threading.BlockingThreadPoolExecutor;
 import utils.helperClasses.HelperFuncs;
 import utils.PositionManager;
-import utils.SmallDemoFormat;
+import utils.Demo;
 import utils.helperClasses.threading.ImageSaver;
 
 import javax.imageio.ImageIO;
@@ -30,26 +30,28 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings("WeakerAccess")
 public class Main extends PApplet {
 
-    public static final String demoPath = "demos/cm/08"; // can be file or folder; if folder then search is recursive
-    public static final String imgPath = "img/levels/top/08.png";
+    public static final String demoPath = "demos/cm/e02"; // can be file or folder; if folder then search is recursive
+    public static final String imgPath = "img/levels/side/e02-y.png";
     public static final float hostFramerate = 0; // if you want to convert to gif use multiples of 100 (100,50,25,etc.)
     public static final boolean render = false;
-    public static final Player.TextSetting textSetting = Player.TextSetting.NONE;
+    public static final Player.TextSetting textSetting = Player.TextSetting.PLAYER_NAME_IF_NO_AVATAR;
     public static final Player.InterpType interpType = Player.InterpType.LINEAR_THRESHOLD;
     public static final float playerDiameter = 60; // pixels
     public static final String renderOutputFolder = "img/render output";
     public static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
     public float hostTimeScale = 1;
+    public float startTick = 0f;
+    public float endTick = Float.MAX_VALUE; // only applies when rendering, will stop when this tick has been exceeded
 
     // don't modify
     public List<Drawable> drawables = new ArrayList<>();
-    public SmallDemoFormat[] smallDemoFormats;
+    public Demo[] demos;
     public PImage img;
-    public DemoToImageMapper.WarpedMapper mapper;
+    public DemoToImageMapper.ScaledMapper mapper;
     public String[] demoPaths;
     public long timeAtListKeyFrame;
     public float tickAtLastKeyFrame = 0;
-    public float currentTick;
+    public float currentTick = startTick;
     public boolean paused = false;
     public BlockingThreadPoolExecutor executor;
     public int maxLength;
@@ -60,7 +62,7 @@ public class Main extends PApplet {
         @Override
         public void run() {
             System.out.println(String.format("frames processed: %d/%d, queue size: %d/%d, threads active: %d/%d",
-                    ImageSaver.framesFinishedInDir.get(renderOutputFolder).get(), (long)Math.ceil(maxLength / 66f * hostFramerate) + 1,
+                    ImageSaver.framesFinishedInDir.get(renderOutputFolder).get(), (long)Math.ceil((Math.min(maxLength, endTick) - startTick) / 66f * hostFramerate),
                     (BlockingThreadPoolExecutor.queueCapacity - executor.getQueue().remainingCapacity()), BlockingThreadPoolExecutor.queueCapacity,
                     executor.getActiveCount(), executor.getMaximumPoolSize()));
         }
@@ -83,7 +85,7 @@ public class Main extends PApplet {
             bImg = ImageIO.read(new File(imgPath));
             DemoToImageMapper tmpMapper = new DemoToImageMapper(ImageCalibrator.offsetsFilePath, imgPath);
             tmpMapper.loadProperties();
-            mapper = tmpMapper.new WarpedMapper();
+            mapper = tmpMapper.new ScaledMapper();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-2);
@@ -132,7 +134,6 @@ public class Main extends PApplet {
             demoPaths = new String[] {demoPath};
         } else {
             try {
-                System.out.println("getting demos...");
                 demoPaths = Files.walk(Paths.get(demoPath))
                         .filter(Files::isRegularFile)
                         .map(Path::toString)
@@ -144,11 +145,11 @@ public class Main extends PApplet {
             }
         }
         System.out.println("parsing demos...");
-        smallDemoFormats = PositionManager.demosFromPaths(demoPaths);
-        Arrays.stream(smallDemoFormats).forEach(smallDemoFormat -> drawables.add(
-                new Player(this, smallDemoFormat, playerDiameter, textSetting, interpType, mapper)));
+        demos = PositionManager.demosFromPaths(demoPaths);
+        Arrays.stream(demos).forEach(demo -> drawables.add(
+                new Player(this, demo, playerDiameter, textSetting, interpType, mapper)));
         if (!render) {
-            drawables.add(new SpeedArrow(this));
+            drawables.add(new PlaybackSpeedArrow(this));
             drawables.add(new DraggableSelection(this)); // must be added after players
         }
         img = loadImage(imgPath);
@@ -157,7 +158,7 @@ public class Main extends PApplet {
         else
             img.resize(img.width, (int) (img.height * mapper.shrinkRatio));
 
-        maxLength = Arrays.stream(smallDemoFormats).mapToInt(demo -> demo.maxTick).max().orElse(1);
+        maxLength = Arrays.stream(demos).mapToInt(demo -> demo.maxTick).max().orElse(1);
         System.out.println("max demo length in ticks: " + maxLength);
 
         if (render) {
@@ -187,7 +188,7 @@ public class Main extends PApplet {
         if (!paused) {
             currentTick = (hostFramerate <= 0 ?
                     tickAtLastKeyFrame + ((System.currentTimeMillis() - timeAtListKeyFrame) / 1000f * 66 * hostTimeScale)
-                    : (frameCount * 66f / hostFramerate));
+                    : (frameCount * 66f / hostFramerate + startTick));
         }
 
         drawables.forEach(drawable -> drawable.draw(this));
@@ -209,7 +210,8 @@ public class Main extends PApplet {
                 // add a new image to the queue
                 executor.execute(new ImageSaver(renderOutputFolder, frameCount, HelperFuncs.deepImageCopy((BufferedImage)g.image)));
                 // if all players are invisible, the next frame will not be rendering (image is only displayed when draw is finished)
-                stopNextFrame = HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible);
+                stopNextFrame = HelperFuncs.filterForType(drawables.stream(), Player.class).allMatch(player -> player.invisible)
+                        || currentTick > endTick;
             }
         }
     }

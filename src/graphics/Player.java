@@ -6,7 +6,7 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PImage;
 import utils.DemoToImageMapper;
-import utils.SmallDemoFormat;
+import utils.Demo;
 
 import java.io.File;
 import java.util.HashMap;
@@ -21,21 +21,23 @@ public class Player implements Drawable {
     private static HashMap<String, Integer> playerToTextColorMapper = new HashMap<>();
     private static HashMap<String, Boolean> playerUsesDefaultAvatar = new HashMap<>(); // bleh
 
-    public final SmallDemoFormat demo;
-    private final float diameter;
+    public final Demo demo;
+    final float diameter;
     private final TextSetting textSetting;
     private final InterpType interpType;
     private final PImage playerImg;
     public float x, y;
-    private final DemoToImageMapper.WarpedMapper mapper;
+    private final DemoToImageMapper.ScaledMapper mapper;
     public boolean invisible;
     private final boolean defaultAvatar;
     private final float textSize;
-    private final int textColor;
+    final int textColor;
     int backgroundColor = 0; // starts completely transparent, this field is used exclusively by DraggableSelection right now
+    private final PlayerArrow playerArrow;
+    public Demo.PosAndRot currentPosAndRot;
 
 
-    public Player(PApplet applet, SmallDemoFormat demo, float diameter, TextSetting setting, InterpType interpType, DemoToImageMapper.WarpedMapper mapper) {
+    public Player(PApplet applet, Demo demo, float diameter, TextSetting setting, InterpType interpType, DemoToImageMapper.ScaledMapper mapper) {
         this.demo = demo;
         this.diameter = diameter;
         textSize = diameter * textScale;
@@ -94,6 +96,8 @@ public class Player implements Drawable {
             playerToTextColorMapper.put(demo.playerNameInDemo, textColor);
             playerUsesDefaultAvatar.put(demo.playerNameInDemo, defaultAvatar);
         }
+        // initialize this at the end since this uses the players text color
+        playerArrow = new PlayerArrow(applet, this);
     }
 
 
@@ -103,6 +107,8 @@ public class Player implements Drawable {
         invisible = canvas.currentTick > demo.maxTick || canvas.currentTick < 0;
         if (!invisible) {
             setCoords(canvas.currentTick);
+            //System.out.println(Arrays.toString(currentPosAndRot.viewAngles[0]));
+            playerArrow.draw(canvas);
             canvas.pushStyle();
             if (backgroundColor != 0) {
                 canvas.strokeWeight(0);
@@ -150,42 +156,39 @@ public class Player implements Drawable {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
+
     private void setCoords(float tick) {
-        double[] positions = null;
-        SmallDemoFormat.Position tmpPos = new SmallDemoFormat.Position(tick);
-        SmallDemoFormat.Position floorTick = demo.positions.lower(tmpPos);
-        SmallDemoFormat.Position ceilingTick = demo.positions.ceiling(tmpPos);
+        currentPosAndRot = null;
+        Demo.PosAndRot tmpPos = new Demo.PosAndRot(tick);
+        Demo.PosAndRot floorTick = demo.posAndRots.lower(tmpPos);
+        Demo.PosAndRot ceilingTick = demo.posAndRots.ceiling(tmpPos);
 
         if (floorTick == null && ceilingTick == null)
             throw new IllegalArgumentException("no ticks found in " + demo.demoName);
         else if (floorTick == null)
-            positions = ceilingTick.locations[0];
+            currentPosAndRot = ceilingTick;
         else if (ceilingTick == null)
-            positions = floorTick.locations[0];
+            currentPosAndRot = floorTick;
 
-        if (positions == null) {
+        if (currentPosAndRot == null) {
             switch (interpType) {
                 case LINEAR_THRESHOLD:
                     // if the position is greater than some threshold, don't interp
-                    if (SmallDemoFormat.Position.distance(floorTick, ceilingTick, 0) / (ceilingTick.tick - floorTick.tick) > linearThreshold) {
-                        positions = floorTick.locations[0];
+                    if (Demo.PosAndRot.distance(floorTick, ceilingTick, 0) / (ceilingTick.tick - floorTick.tick) > linearThreshold) {
+                        currentPosAndRot = floorTick;
                         break;
                     }
                 case LINEAR:
-                    positions = new double[3];
-                    float lerpFactor = (tick - floorTick.tick) / (ceilingTick.tick - floorTick.tick); // how far the current tick is from floorTick to ceilingTick [0,1]
-                    for (int i = 0; i < 3; i++)
-                        positions[i] = floorTick.locations[0][i] * (1 - lerpFactor) + ceilingTick.locations[0][i] * lerpFactor;
+                    currentPosAndRot = Demo.PosAndRot.lerp(floorTick, ceilingTick, tick);
                     break;
                 case NONE:
                 default:
-                    positions = floorTick.locations[0];
+                    currentPosAndRot = floorTick;
                     break;
             }
         }
-        x = mapper.getScreenX((float)positions[0], (float)positions[1], (float)positions[2]);
-        y = mapper.getScreenY((float)positions[0], (float)positions[1], (float)positions[2]);
+        x = (float)mapper.getScreenX(currentPosAndRot.locations[0]);
+        y = (float)mapper.getScreenY(currentPosAndRot.locations[0]);
     }
 
 
