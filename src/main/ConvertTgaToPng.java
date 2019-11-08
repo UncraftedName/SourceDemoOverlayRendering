@@ -36,7 +36,11 @@ public class ConvertTgaToPng {
                     int height = TGAReader.getHeight(buffer);
                     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
                     image.setRGB(0, 0, width, height, pixels, 0, width);
-                    ImageIO.write(image, "png", new File(file.toString().replaceFirst("[.][^.]+$", "") + ".png"));
+
+                    ImageIO.write(image, "png",
+                            new File(file.toString() // file name without extension
+                                    .replaceFirst("[.][^.]+$", "") + ".png"));
+
                     Files.deleteIfExists(file.toAbsolutePath());
                     System.out.println("Converted " + file.toAbsolutePath().toString());
                 }

@@ -4,7 +4,7 @@ import main.Main;
 import processing.core.PImage;
 import utils.helperClasses.HelperFuncs;
 
-public class SpeedArrow implements Drawable {
+public class PlaybackSpeedArrow implements Drawable {
 
     private final static String fastForwardImgDir = "img/icons/fast-forward.png";
     private final static String pauseImgDir = "img/icons/pause.png";
@@ -12,7 +12,7 @@ public class SpeedArrow implements Drawable {
     private static PImage pauseImg, forwardsPlaybackImg, backwardsPlaybackImg;
 
 
-    public SpeedArrow(Main applet) {
+    public PlaybackSpeedArrow(Main applet) {
         if (forwardsPlaybackImg == null) {
             forwardsPlaybackImg = applet.loadImage(fastForwardImgDir);
             forwardsPlaybackImg.resize(diameter, diameter);

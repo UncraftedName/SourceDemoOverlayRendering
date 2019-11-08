@@ -115,14 +115,14 @@ public class DemoToImageMapper {
     // Ensures that x game units per pixel = y game units per pixel.
     // This is done by scaling one of those values to match the other;
     // no stretching is done, only shrinking.
-    public class WarpedMapper {
+    public class ScaledMapper {
 
         public final float screenX0, screenY0;
         public final float xRatio, yRatio;
         public final float shrinkRatio;
         public final boolean shrinkX;
 
-        public WarpedMapper() {
+        public ScaledMapper() {
             DemoToImageMapper baseMapper = DemoToImageMapper.this; // outer class instance
             float absXRatio = Math.abs(baseMapper.xRatio);
             float absYRatio = Math.abs(baseMapper.yRatio);
@@ -144,32 +144,63 @@ public class DemoToImageMapper {
         }
 
 
-        public float getScreenX(float x, float y, float z) {
+        public double getScreenX(double[] arr) { // x, y, z
             switch (DemoToImageMapper.this.viewType) {
                 case Z_CONST_XX:
                 case Y_CONST:
-                    return screenX0 + xRatio * x;
+                    return screenX0 + xRatio * arr[0];
                 case Z_CONST_XY:
                 case X_CONST:
-                    return screenX0 + xRatio * y;
+                    return screenX0 + xRatio * arr[1];
                 default:
                     throw new IllegalArgumentException("unknown view type");
             }
         }
 
 
-        public float getScreenY(float x, float y, float z) {
+        public double getScreenY(double[] arr) { // x, y, z
             switch (DemoToImageMapper.this.viewType) {
                 case Z_CONST_XX:
-                    return screenY0 + yRatio * y;
+                    return screenY0 + yRatio * arr[1];
                 case Z_CONST_XY:
-                    return screenY0 + yRatio * x;
+                    return screenY0 + yRatio * arr[0];
                 case X_CONST:
                 case Y_CONST:
-                    return screenY0 + yRatio * z;
+                    return screenY0 + yRatio * arr[2];
                 default:
                     throw new IllegalArgumentException("unknown view type");
             }
+        }
+
+
+        // get screen angle from in-game angles; visually 'y' is flipped but the math is the same
+        public double getScreenYaw(double[] arr) { // (in-game) pitch, yaw, roll
+            double out;
+            switch (DemoToImageMapper.this.viewType) {
+                case Z_CONST_XX:
+                    out = arr[1] * Math.signum(yRatio);
+                    if (xRatio < 0)
+                        out = (180 - Math.abs(out)) * Math.signum(out); // reflect across x-axis
+                    break;
+                case Z_CONST_XY:
+                    // same as above, but now ang = (-yaw + 90), and x & y axes are switched
+                    out = (-arr[1] + 90) * Math.signum(xRatio);
+                    if (yRatio < 0)
+                        out = (180 - Math.abs(out)) * Math.signum(out);
+                    break;
+                case X_CONST:
+                case Y_CONST:
+                    double scaleX = Math.cos(Math.toRadians(arr[1]));
+                    out = Math.toDegrees(Math.acos(Math.cos(Math.toRadians(arr[0])) * scaleX));
+                    if (arr[0] < 0 == yRatio < 0)
+                        out *= -1;
+                    if (xRatio < 0)
+                        out = (180 - Math.abs(out)) * Math.signum(out);
+                    break;
+                default:
+                    throw new IllegalArgumentException("unknown view type");
+            }
+            return Math.toRadians(out);
         }
     }
 

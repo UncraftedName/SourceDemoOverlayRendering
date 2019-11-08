@@ -14,8 +14,10 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
     public static final int queueCapacity = 25;
 
 
-    // funny meme, i trick the executor to make more threads by telling it the queue is full (which it is),
-    // and then when it throws an exception to complain about that i just do nothing ¯\_(ツ)_/¯
+    // Funny meme - when the queue is full I block offer() until the queue has space, but still return saying
+    // that offer() failed so that the executor will spawn more threads (if it can).
+    // And then when it throws an exception to complain about that i just do nothing ¯\_(ツ)_/¯
+    // since I know that the task was actually put in the queue successfully.
     public BlockingThreadPoolExecutor() {
         super(
                 1, threadCount,
@@ -32,6 +34,6 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
                         return isFull; // tell the executor if the queue is full so it can start more threads
                     }
                 },
-                (r, executor) -> {}); // rejection handler does nothing, i assume the element is properly inserted
+                (r, executor) -> {}); // rejection handler does nothing; i assume the task is properly inserted into the queue
     }
 }

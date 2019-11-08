@@ -3,6 +3,7 @@ package playerInfo;
 public enum PlayerIcon {
 
     // if the path is not present or null, it's set to a default path
+    // TODO fix rectangular image stretching
 
     Imanex("https://yt3.ggpht.com/a/AGF-l78xn13f4gdNE1RH07wP0s6I3LbgblAitRQY4w"),
     UncraftedName("https://cdn.discordapp.com/avatars/396934998881730560/b37dbe83405b45a1bbf7da61be937db4.png?size=512"),
@@ -25,7 +26,7 @@ public enum PlayerIcon {
     Avetixz("https://cdn.discordapp.com/avatars/82983885075390464/da714bfa1acd7c3a2043447e66f22460.png?size=512"),
     Dacciox("https://cdn.discordapp.com/avatars/82980713455943680/7f739ce62bb7b0c7df75ae85011f607b.png?size=512"),
     Tendersteel("https://cdn.discordapp.com/avatars/188838860267061249/2d3a227029a3810105b20d1deebc9ec4.webp?size=512"),
-    eljest("https://cdn.discordapp.com/avatars/450725660013363210/fb55c9aff3d1b4f1463f548db42dda37.webp?size=512"),
+    Livvy("img/icons/players/eljest.png"),
     adamantite("https://cdn.discordapp.com/avatars/138793454485504000/5a27cd07716e215b05a3723fc5824930.png?size=512"),
     Zeta("https://cdn.discordapp.com/avatars/168895166143397888/fe384f385ce70c8510e21080def91336.webp?size=512"),
     sunsetbear("https://cdn.discordapp.com/avatars/108674374172721152/3570ab92b70c3eed9f75f8042003bff9.webp?size=512"),

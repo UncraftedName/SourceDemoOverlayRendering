@@ -1,5 +1,7 @@
 package utils;
 
+import utils.helperClasses.HelperFuncs;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -7,15 +9,15 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-public class SmallDemoFormat {
+public class Demo {
 
     public final String demoName;
     public final String playerNameInDemo;
-    public final TreeSet<Position> positions = new TreeSet<>(Position.tickComparator); // positions for every player, sorted by tick
+    public final TreeSet<PosAndRot> posAndRots = new TreeSet<>(PosAndRot.tickComparator); // positions for every player, sorted by tick
     public final int maxTick;
 
 
-    public SmallDemoFormat(String demoPath) throws IOException, IllegalArgumentException {
+    public Demo(String demoPath) throws IOException, IllegalArgumentException {
         demoName = new File(demoPath).getName().replaceFirst("[.][^.]+$", ""); // file name without extension
         DataInputStream demoFileStream = new DataInputStream(new FileInputStream(new File(demoPath)));
         demoFileStream.skipNBytes(276); // skip over header, demo & network protocol, & server name
@@ -23,6 +25,7 @@ public class SmallDemoFormat {
         if (demoFileStream.read(playerNameAsBytes, 0, 260) == -1)
            throw new IllegalArgumentException("Not a demo file probably");
         demoFileStream.close();
+
         int indexOfNullChar = 0;
         for (; indexOfNullChar < 260; indexOfNullChar++) // loop until null char is found
             if (playerNameAsBytes[indexOfNullChar] == 0)
@@ -32,6 +35,7 @@ public class SmallDemoFormat {
         InputStream parserOutput = Runtime.getRuntime().exec(
                 new String[]{"resource/UncraftedDemoParser.exe", demoPath, "-p"}).getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(parserOutput));
+
         // read the lines of the parser output and add the positions to the position list
         reader.lines().filter(s -> s.length() > 0 && s.charAt(0) == '|').forEach(s -> { // |tick|~|x1,y1,z1|p1,y1,r1|~|x2,y2,z2|p2,y2,r2|...
             String[] tickAndPlayers = s.split("~");
@@ -43,22 +47,23 @@ public class SmallDemoFormat {
                 double[][] angles = new double[locationsAndAngles.length][3];
                 for (int i = 0; i < locationsAndAngles.length; i++) {
                     locations[i] = Arrays.stream(locationsAndAngles[i][1].split(",")).mapToDouble(Double::parseDouble).toArray();
+                    // super important - make sure the angles are always greater than 0, otherwise the lerp will lerp from 180 to -180 which will look really bad
                     angles[i] = Arrays.stream(locationsAndAngles[i][2].split(",")).mapToDouble(Double::parseDouble).toArray();
                 }
                 // make sure there are no duplicate ticks, and remove the tick where pos = ang = 0
-                if (positions.stream().noneMatch(position -> position.tick == tick) && !isNullTick(locations, angles))
-                    positions.add(new Position(tick, locations, angles));
+                if (posAndRots.stream().noneMatch(posAndRot -> posAndRot.tick == tick) && !isNullTick(locations, angles))
+                    posAndRots.add(new PosAndRot(tick, locations, angles));
             }
         });
         //noinspection OptionalGetWithoutIsPresent
-        maxTick = (int) positions.stream().mapToDouble(position -> position.tick).max().getAsDouble();
+        maxTick = (int) posAndRots.stream().mapToDouble(posAndRot -> posAndRot.tick).max().getAsDouble();
         populateVelocities();
     }
 
 
     private void populateVelocities() {
-        Iterator<Position> positionIterator = positions.iterator();
-        Position previous = null, current = positionIterator.next();
+        Iterator<PosAndRot> positionIterator = posAndRots.iterator();
+        PosAndRot previous = null, current = positionIterator.next();
         while (positionIterator.hasNext()) {
             previous = current;
             current = positionIterator.next();
@@ -88,9 +93,9 @@ public class SmallDemoFormat {
     }
 
 
-    public static class Position {
+    public static class PosAndRot { // position and rotation of every player in a single demo
 
-        static final Comparator<Position> tickComparator = (o1, o2) -> Float.compare(o1.tick, o2.tick);
+        static final Comparator<PosAndRot> tickComparator = (o1, o2) -> Float.compare(o1.tick, o2.tick);
 
         public final float tick;
         // [player][loc/ang]
@@ -100,7 +105,15 @@ public class SmallDemoFormat {
         public final double[][] velocities; // x, y, z
 
 
-        public Position(int tick, double[][] locations, double[][] viewAngles) {
+        private PosAndRot(float tick, double[][] locations, double[][] viewAngles, double[][] velocities) {
+            this.tick = tick;
+            this.locations = locations;
+            this.viewAngles = viewAngles;
+            this.velocities = velocities;
+        }
+
+
+        public PosAndRot(int tick, double[][] locations, double[][] viewAngles) {
             this.tick = tick;
             this.locations = locations;
             this.viewAngles = viewAngles;
@@ -109,17 +122,38 @@ public class SmallDemoFormat {
         }
 
 
-        public Position(float tick) { // for searching the tree set
+        public PosAndRot(float tick) { // for searching the tree set
             this.tick = tick;
             locations = viewAngles = velocities = null;
         }
 
 
-        public static double distance(Position p1, Position p2, int player) {
+        public static double distance(PosAndRot p1, PosAndRot p2, int player) {
             double tmpSum = 0;
             for (int i = 0; i < 3; i++)
                 tmpSum += (p1.locations[player][i] - p2.locations[player][i]) * (p1.locations[player][i] - p2.locations[player][i]);
             return Math.sqrt(tmpSum);
+        }
+        
+        
+        public static PosAndRot lerp(PosAndRot p1, PosAndRot p2, float tick) {
+            double lerpFactor = (tick - p1.tick) / (p2.tick - p1.tick);
+            // Angles are lerped in a special way to prevent lerping from -180 to 180.
+            // This should only apply to in game yaw, but I do it on all angles just in case.
+            // Credit to https://gist.github.com/shaunlebron/8832585
+            double[][] viewAngles = new double[p1.viewAngles.length][3];
+            for (int i = 0; i < viewAngles.length; i++) {
+                for (int j = 0; j < viewAngles[0].length; j++) {
+                    double dist = (p2.viewAngles[i][j] - p1.viewAngles[i][j]) % 360.0;
+                    double shortAngeDist = 2 * dist % 360.0 - dist;
+                    viewAngles[i][j] = p1.viewAngles[i][j] + lerpFactor * (shortAngeDist);
+                }
+            }
+            return new PosAndRot(
+                    tick,
+                    HelperFuncs.lerp(p1.locations, p2.locations, lerpFactor),
+                    viewAngles,
+                    HelperFuncs.lerp(p1.velocities, p2.velocities, lerpFactor));
         }
     }
 }

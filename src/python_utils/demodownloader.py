@@ -204,6 +204,7 @@ print("downloading to {}...".format(os.path.abspath(download_path)))
 
 for link in links_to_download:  # [(run1 ("site1", "link1")), (run2, ("site2", "link2"))...]
 
+    # noinspection PyTypeChecker
     full_path = os.path.join(os.path.abspath(download_path), "{} {} {}{}".format(
         link[0]["level"], link[0]["category"], link[0]["player"], get_extension(link[1][1])))
 
@@ -222,12 +223,13 @@ for link in links_to_download:  # [(run1 ("site1", "link1")), (run2, ("site2", "
 
 # set extensions for any downloaded files which we believe are demo files
 for d in os.listdir(download_path):
+    full_path = os.path.join(download_path, d)
     if d[-4:] != ".dem":
-        with open(os.path.join(download_path, d), 'rb') as f:
-            if f.read(7) != b"HL2DEMO":  # demo "header"
+        with open(full_path, 'rb') as f:
+            if f.read(8) != b'HL2DEMO\x00':  # demo "header"
                 continue
         print("setting file extension for " + d)
-        os.rename(os.path.join(download_path, d), os.path.join(download_path, d) + ".dem")
+        os.rename(full_path, full_path + ".dem")
 
 # sort by site
 misc_links_to_print.sort(key=lambda l: l[0])

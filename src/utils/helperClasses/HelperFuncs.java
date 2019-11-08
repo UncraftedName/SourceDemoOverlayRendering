@@ -6,6 +6,7 @@ import processing.core.PImage;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,5 +42,26 @@ public class HelperFuncs {
 
     public static double roundToPlaces(double n, int places) {
         return Math.round(n * Math.pow(10, places)) / Math.pow(10, places);
+    }
+
+
+    public static double lerp(double d1, double d2, double x) {
+        return d1 * (1 - x) + d2 * x;
+    }
+
+
+    public static double[] lerp(double[] arr1, double[] arr2, double x) {
+        double[] out = new double[arr1.length];
+        for (int i = 0; i < out.length; i++)
+            out[i] = lerp(arr1[i], arr2[i], x);
+        return out;
+    }
+
+
+    public static double[][] lerp(double[][] arr1, double[][] arr2, double x) {
+        double[][] out = new double[arr1.length][];
+        for (int i = 0; i < out.length; i++)
+            out[i] = lerp(arr1[i], arr2[i], x);
+        return out;
     }
 }

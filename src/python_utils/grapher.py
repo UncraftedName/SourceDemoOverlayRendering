@@ -77,6 +77,7 @@ if len(demos) is 0:
 
 demos.sort(key=lambda x: x.demo_file)
 
+# plt.style.use('dark_background')
 fig, axs = plt.subplots(nrows=3, ncols=2 if graph_velocities else 1, sharex='all')
 fig.suptitle("Positions")
 plt.xlabel('tick')
