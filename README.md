@@ -32,6 +32,4 @@ To generate graphs there's a python script in "src/python_utils" which uses matp
 ![](github-things/chmb-14.png)
 
 Known issues:
-- This project relies on an extremely old version of my [demo parser](https://github.com/UncraftedName/UncraftedDemoParser), it might not work in all games and will only show the position of player one (so coop demos will not show all players).
 - Viewing the overlay in the display window does not work properly if you have a smaller display than the screenshot size. All current screenshots in the project were done on a 1440p monitor, so you might need to scale and recalibrate the images if you wanted to view the result on a smaller monitor. The rendered images should still be fine though.
-- The tickrate is incorrect for games other than portal 1, I think changing any values in Main.java from 66 to the correct value should work, but I haven't tested that.
