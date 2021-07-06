@@ -108,7 +108,9 @@ public class Player implements Drawable {
         if (!invisible) {
             setCoords(canvas.currentTick);
             //System.out.println(Arrays.toString(currentPosAndRot.viewAngles[0]));
-            playerArrow.draw(canvas);
+            if (Main.drawArrow)
+                playerArrow.draw(canvas);
+
             canvas.pushStyle();
             if (backgroundColor != 0) {
                 canvas.strokeWeight(0);

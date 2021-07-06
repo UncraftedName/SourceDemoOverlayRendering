@@ -33,12 +33,14 @@ public class Main extends PApplet {
     public static final String demoPath = "demos/cm/e02"; // can be file or folder; if folder then search is recursive
     public static final String imgPath = "img/levels/side/e02-y.png";
     public static final float hostFramerate = 0; // if you want to convert to gif use multiples of 100 (100,50,25,etc.)
-    public static final boolean render = false;
+    public static final int tickrate = 66; // specify tickrate for each game / p2 uses 60 - p1 uses 66
+    public static final boolean render = false; // if set to true, change hostFramerate value other to something other than 0
     public static final Player.TextSetting textSetting = Player.TextSetting.PLAYER_NAME_IF_NO_AVATAR;
     public static final Player.InterpType interpType = Player.InterpType.LINEAR_THRESHOLD;
     public static final float playerDiameter = 60; // pixels
     public static final String renderOutputFolder = "img/render output";
     public static final boolean createFFMPEGBatch = true; // will create a basic ffmpeg file in the render output directory to convert the images to a video
+    public static boolean drawArrow = false;
     public float hostTimeScale = 1;
     public float startTick = 0f;
     public float endTick = Float.MAX_VALUE; // only applies when rendering, will stop when this tick has been exceeded
@@ -62,7 +64,7 @@ public class Main extends PApplet {
         @Override
         public void run() {
             System.out.println(String.format("frames processed: %d/%d, queue size: %d/%d, threads active: %d/%d",
-                    ImageSaver.framesFinishedInDir.get(renderOutputFolder).get(), (long)Math.ceil((Math.min(maxLength, endTick) - startTick) / 66f * hostFramerate),
+                    ImageSaver.framesFinishedInDir.get(renderOutputFolder).get(), (long)Math.ceil((Math.min(maxLength, endTick) - startTick) / tickrate * hostFramerate),
                     (BlockingThreadPoolExecutor.queueCapacity - executor.getQueue().remainingCapacity()), BlockingThreadPoolExecutor.queueCapacity,
                     executor.getActiveCount(), executor.getMaximumPoolSize()));
         }
@@ -187,8 +189,8 @@ public class Main extends PApplet {
         image(img, 0, 0);
         if (!paused) {
             currentTick = (hostFramerate <= 0 ?
-                    tickAtLastKeyFrame + ((System.currentTimeMillis() - timeAtListKeyFrame) / 1000f * 66 * hostTimeScale)
-                    : (frameCount * 66f / hostFramerate + startTick));
+                    tickAtLastKeyFrame + ((System.currentTimeMillis() - timeAtListKeyFrame) / 1000f * tickrate * hostTimeScale)
+                    : (frameCount * tickrate / hostFramerate + startTick));
         }
 
         drawables.forEach(drawable -> drawable.draw(this));
